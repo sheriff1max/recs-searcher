@@ -1,68 +1,80 @@
 """
-Алгоритмы для преобразования текстовых
-данных в единый формат.
+Чистка данных для разных языков.
 """
 
 
-# from nltk.tokenize import word_tokenize
+from typing import Union, Callable, List
 
-import re
-import string
-# from pymorphy3 import MorphAnalyzer
-# from nltk.corpus import stopwords
-# import nltk
-
-# nltk.download('stopwords')
+from base import BaseCleaner
 
 
-from nltk.stem import WordNetLemmatizer
+class GeneralCleaner(BaseCleaner):
+    """Класс очистики текста для разных языков."""
 
-import natasha
+    def __init__(
+            self,
 
-lemmatizer = WordNetLemmatizer()
-
-print(lemmatizer.lemmatize('машины'))
-
-
-
-def text_lower(text: str) -> str:
-    """"""
-    return text.lower()
-
-
-def remove_punct(text: str) -> str:
-    """"""
-    return text.translate(str.maketrans('', '', string.punctuation))
-
-
-def remove_number(text: str) -> str:
-    """"""
-    return re.sub(r'\d+', "", text)
-
-
-def remove_whitespace(text: str) -> str:
-    """"""
-    return text.strip()
-
-
-def remove_html_tag(text: str) -> str:
-    """"""
-    html_pattern = re.compile('<.*?>')
-    return re.sub(html_pattern, '', text) 
+            # Очистка для любого языка:
+            text_lower: Union[bool, Callable[[str], str]] = True,
+            remove_punct: Union[bool, Callable[[str], str]] = True,
+            remove_number: Union[bool, Callable[[str], str]] = True,
+            remove_whitespace: Union[bool, Callable[[str], str]] = True,
+            remove_html_tag: Union[bool, Callable[[str], str]] = True,
+            remove_url: Union[bool, Callable[[str], str]] = True,
+            remove_emoji: Union[bool, Callable[[str], str]] = True,
+    ):
+        super().__init__(
+            text_lower,
+            remove_punct,
+            remove_number,
+            remove_whitespace,
+            remove_html_tag,
+            remove_url,
+            remove_emoji,
+        )
+    
+    def _custom_transform(self, array: List[str]) -> List[str]:
+        """Т.к. данный класс применим для любого языка,
+        уникальных преобразований у него нет."""
+        return array
 
 
-def remove_url(text: str) -> str:
-    """"""
-    url_pattern = re.compile(r'https?://\S+|www\.\S+')
-    return re.sub(url_pattern, '', text) 
+class EngCleaner(BaseCleaner):
+    """Класс очистики текста для английского языка."""
 
+    def __init__(
+            self,
 
-def remove_emoji(text: str) -> str:
-    """"""
-    emoji_pattern = re.compile("["
-          u"\U0001F600-\U0001F64F"  # смайлики.
-          u"\U0001F300-\U0001F5FF"  # символы и пиктограммы.
-          u"\U0001F680-\U0001F6FF"  # транспорт и символы на карте.
-          u"\U0001F1E0-\U0001F1FF"  # флаги (iOS).
-                            "]+", flags=re.UNICODE)
-    return re.sub(emoji_pattern, '', text)
+            # Очистка для любого языка:
+            text_lower: Union[bool, Callable[[str], str]] = True,
+            remove_punct: Union[bool, Callable[[str], str]] = True,
+            remove_number: Union[bool, Callable[[str], str]] = True,
+            remove_whitespace: Union[bool, Callable[[str], str]] = True,
+            remove_html_tag: Union[bool, Callable[[str], str]] = True,
+            remove_url: Union[bool, Callable[[str], str]] = True,
+            remove_emoji: Union[bool, Callable[[str], str]] = True,
+
+            # Очистка под конкретный язык:
+            remove_stop_word: Union[bool, Callable[[str], str]] = False,
+            change_form: Union[bool, Callable[[str], str]] = False,
+            correction_spelling: Union[bool, Callable[[str], str]] = False,
+            replace_abbreviation: Union[bool, Callable[[str], str]] = False
+    ):
+        super().__init__(
+            text_lower,
+            remove_punct,
+            remove_number,
+            remove_whitespace,
+            remove_html_tag,
+            remove_url,
+            remove_emoji,
+        )
+
+        self._remove_stop_word = remove_stop_word
+        self._change_form = change_form
+        self._correction_spelling = correction_spelling
+        self._replace_abbreviation = replace_abbreviation
+    
+    def _custom_transform(self, array: List[str]):
+        """"""
+        return array
