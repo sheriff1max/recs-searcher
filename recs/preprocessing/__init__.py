@@ -1,4 +1,4 @@
-from ._base import (
+from ._clear import (
     GeneralCleaner,
     EngCleaner
 )
