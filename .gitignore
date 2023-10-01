@@ -2,3 +2,4 @@ venv/
 recs/models/weights/
 .ipynb_checkpoints
 .git
+__pycache__
