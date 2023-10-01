@@ -71,6 +71,7 @@ def prepare_csv(
 
 
 if __name__ == '__main__':
+    # _prepare_csv.py -f filename.csv -c col_name
 
     import argparse
 

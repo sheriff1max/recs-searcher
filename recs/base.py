@@ -6,6 +6,9 @@
 from abc import ABC, abstractmethod
 from typing import Union, Callable, Iterable, List
 
+import pandas as pd
+import numpy as np
+
 
 class BaseTransformation(ABC):
     """Абстрактный класс для трансформаторов текста.
@@ -80,11 +83,11 @@ class BaseModel(ABC):
     """Абстрактный класс для моделей эмбеддингов."""
 
     @abstractmethod
-    def load_model(self, filename: str) -> object:
+    def load(self, filename: str) -> object:
         """"""
 
     @abstractmethod
-    def save_model(self, filename: str) -> object:
+    def save(self, filename: str) -> object:
         """"""
 
     @abstractmethod
@@ -92,5 +95,9 @@ class BaseModel(ABC):
         """"""
 
     @abstractmethod
-    def transform(self, array: Iterable[str]) -> List[str]:
+    def transform(self, array: Iterable[str]) -> np.ndarray:
         """"""
+
+    def fit_transform(self, array: Iterable[str]) -> np.ndarray:
+        self.fit(array)
+        return self.transform(array)

@@ -1,3 +1,4 @@
 venv/
+recs/models/weights/
 .ipynb_checkpoints
 .git

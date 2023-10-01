@@ -6,4 +6,8 @@ from .base import (
 __all__ = [
     'BaseTransformation',
     'BaseModel',
+
+    'datasets',
+    'models',
+    'preprocessing',
 ]
