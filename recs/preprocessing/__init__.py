@@ -1,10 +1,8 @@
 from ._clear import (
-    GeneralCleaner,
-    EngCleaner
+    BaseCleaner,
 )
 
 
 __all__ = [
-    'GeneralCleaner',
-    'EngCleaner',
+    'BaseCleaner',
 ]

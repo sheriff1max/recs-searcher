@@ -7,7 +7,8 @@ __all__ = [
     'BaseTransformation',
     'BaseModel',
 
-    'datasets',
+    'dataset',
     'models',
     'preprocessing',
+    'similarity_search'
 ]
