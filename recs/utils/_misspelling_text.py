@@ -6,7 +6,7 @@
 
 import random
 import string
-from typing import Union
+from typing import Union, Callable
 
 
 ALPHABET = {
@@ -16,53 +16,104 @@ ALPHABET = {
 ALPHABET['any'] = ''.join([alph for alph in ALPHABET.values()])
 
 
+def _wrapper_func_seed(
+        *data,
+        func: Callable,
+        seed=Union[None, int]
+) -> str:
+    """"""
+    random.seed(seed)
+    return func(*data)
+
+
 def _change_random_sym(
         text: str,
-        p: float,
+        p: float = 0.1,
         language: str = 'any',
-        change_any_sym: bool = True
+        change_only_alpha: bool = True,
 ) -> str:
     """"""
 
-    misspelling_text = ''
+    changed_text = ''
     for sym in text:
 
-        if sym.isalpha() or change_any_sym:
+        if sym.isalpha() or not change_only_alpha:
             if random.random() < p:
                 sym = random.choice(ALPHABET[language])
 
-        misspelling_text += sym
+        changed_text += sym
 
-    return misspelling_text
+    return changed_text
 
 
-def _remove_random_sym(text: str, p: float) -> str:
+def _remove_random_sym(
+        text: str,
+        p: float = 0.1,
+        remove_only_alpha: bool = True,
+) -> str:
     """"""
 
-    misspelling_text = ''
+    changed_text = ''
     for sym in text:
-        if not sym.isdigit() and sym != ' ':
+
+        if sym.isalpha() or not remove_only_alpha:
             if random.random() < p:
-                sym = random.choice(ALPHABET.get(language, ALPHABET['any']))
+                continue
 
-        misspelling_text += sym
+        changed_text += sym
 
-    return misspelling_text
+    return changed_text
 
 
-def _get_abbreviation(text: str,) -> str:
+def _get_abbreviation(
+        text: str,
+        sep: str = ' '
+) -> str:
     """Берутся первые символы слов и превратить
     в одно слово. Нужно для сокращений НАИМЕНОВАНИЙ.
     Например, `Harry Potter` -> `HP`. """
 
-    text = text.split(' ')
-    text = [word[0] for word in text]
-    text = ''.join(text)
-    return text
+    text = text.split(sep)
+    changed_text = [word[0] for word in text]
+    changed_text = ''.join(changed_text)
+    return changed_text
 
-def _remove_random_word(text: str, p: float) -> str:
+
+def _remove_random_word(
+        text: str,
+        p: float = 0.2,
+        remove_only_alpha: bool = True,
+        sep: str = ' '
+) -> str:
     """"""
 
+    changed_text = []
+    for word in text.split(sep):
 
-def _shuffle_words(text: str, p: float) -> str:
+        if word.isalpha() or not remove_only_alpha:
+            if random.random() < p:
+                continue
+        changed_text.append(word)
+    
+    changed_text = ' '.join(changed_text)
+    return changed_text
+
+
+def _shuffle_words(
+        text: str,
+        sep: str = ' '
+) -> str:
     """"""
+
+    changed_text = text.split(sep)
+    changed_text = random.sample(changed_text, len(changed_text))
+    changed_text = ' '.join(changed_text)
+    return changed_text
+
+
+if __name__ == '__main__':
+    print(_shuffle_words('hello man'))
+    print(_change_random_sym('hello man'))
+    print(_get_abbreviation('hello man'))
+    print(_remove_random_sym('hello man'))
+    print(_remove_random_word('hello man'))
