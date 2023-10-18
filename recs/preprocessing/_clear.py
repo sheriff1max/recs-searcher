@@ -80,24 +80,3 @@ class BaseCleaner(BaseTransformation):
             Список с применёнными преобразованиями текста.
         """
         return array
-
-    def transform(self, array: Iterable[str]) -> List[str]:
-        """Применение всех преобразований к массиву.
-
-        Параметры
-        ----------
-        array : Iterable[str]
-            Массив с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
-
-        Returns
-        -------
-        array: List[str]
-            Список с применёнными преобразованиями текста.
-        """
-        array = list(array)
-
-        array = self._base_transform(array)
-        array = self._custom_transform(array)
-        return array

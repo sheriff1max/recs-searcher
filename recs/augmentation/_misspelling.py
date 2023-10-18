@@ -15,16 +15,6 @@ ALPHABET = {
 ALPHABET['any'] = ''.join([alpha for alpha in ALPHABET.values()])
 
 
-def wrapper_func_seed(
-        *data,
-        func: Callable,
-        seed=Union[None, int]
-) -> str:
-    """"""
-    random.seed(seed)
-    return func(*data)
-
-
 def _change_syms(
         text: str,
         p: float = 0.1,
@@ -113,3 +103,8 @@ if __name__ == '__main__':
     print(_add_syms('hello man'))
     print(_multiply_syms('hello man'))
     print(_swap_syms('hello man'))
+
+    # print(wrapper_func_seed(_change_syms, 43, text='hello man'))
+
+    # a = WrapperFunc(_change_syms, 43, language='ru')
+    # print(a.transform('hello man'))

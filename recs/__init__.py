@@ -1,14 +1,11 @@
 from .base import (
     BaseTransformation,
-    BaseModel
+    BaseModel,
+    BaseAugmentation,
 )
 
 __all__ = [
     'BaseTransformation',
+    'BaseAugmentation',
     'BaseModel',
-
-    'dataset',
-    'models',
-    'preprocessing',
-    'similarity_search'
 ]

@@ -7,7 +7,8 @@ from typing import Iterable, List, Callable, Union, Type, Dict
 import pickle
 import os
 
-from base import BaseModel
+from base import BaseModel, BaseTransformation
+from utils import SentenceTransformerDataset
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -20,6 +21,7 @@ from sentence_transformers.evaluation import SentenceEvaluator
 from torch.utils.data import Dataset, DataLoader
 from torch.optim import Optimizer
 from torch.optim import AdamW
+from torch import nn
 
 
 import numpy as np
@@ -190,7 +192,7 @@ class FastTextWrapperModel(BaseModel):
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
 
-        # TODO:
+        # TODO: заменить на норм токенизацию
         array = [text.split() for text in array]
 
         array_list = []
@@ -215,13 +217,18 @@ class SentenceTransformerWrapperModel(BaseModel):
     def __init__(
             self,
             name_model: str = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
+            train_loss: Type[nn.Module] = losses.MultipleNegativesRankingLoss
     ):
         self._model = SentenceTransformer(name_model)
+        self._train_loss = train_loss(model=self._model)
 
     def fit(
             self,
             array: Iterable[str],
-            augmentation_func: Union[None, Callable[[str], str]] = None,
+            augmentation_func: Union[None, BaseTransformation] = None,
+
+            shuffle=True,
+            batch_size=32,
 
             evaluator: SentenceEvaluator = None,
             epochs: int = 1,
@@ -244,24 +251,38 @@ class SentenceTransformerWrapperModel(BaseModel):
     ) -> object:
         """"""
 
-        array = [[text, text] for text in array]
-
-
-        corr["set"] = corr[["topic_title", "topic_title"]].values.tolist()
-        train_df = pd.DataFrame(corr["set"])
-
-        dataset = Dataset.from_pandas(train_df)
-
-        train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=64)
-        train_loss = losses.MultipleNegativesRankingLoss(model=self._model)
-
-        self._model.fit(
-            train_objectives=[(train_dataloader, train_loss)],
-            epochs=epochs,
-            warmup_steps=warmup_steps
+        train_dataset = SentenceTransformerDataset(array)
+        train_dataloader = DataLoader(
+            train_dataset,
+            shuffle=shuffle,
+            batch_size=batch_size
         )
 
+        self._model.fit(
+            train_objectives=[(train_dataloader, self._train_loss)],
+
+            evaluator=evaluator,
+            epochs=epochs,
+            steps_per_epoch=steps_per_epoch,
+            scheduler=scheduler,
+            warmup_steps=warmup_steps,
+            optimizer_class=optimizer_class,
+            optimizer_params=optimizer_params,
+            weight_decay=weight_decay,
+            evaluation_steps=evaluation_steps,
+            output_path=output_path,
+            save_best_model=save_best_model,
+            max_grad_norm=max_grad_norm,
+            use_amp=use_amp,
+            callback=callback,
+            show_progress_bar=show_progress_bar,
+            checkpoint_path=checkpoint_path,
+            checkpoint_save_steps=checkpoint_save_steps,
+            checkpoint_save_total_limit=checkpoint_save_total_limit
+        )
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
-        return super().transform()
+
+        array = self._model.encode(array)
+        return np.array(array)

@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 
 from utils import _metrics
+from utils import WrapperTransform
 
 
 CUR_PATH = os.path.dirname(__file__)
@@ -85,13 +86,13 @@ class BaseTransformation(ABC):
             return arg
 
     @abstractmethod
-    def transform(self, array: Iterable[str]) -> List[str]:
-        """Применение всех преобразований к массиву.
+    def _base_transform(self, array: List[str]) -> List[str]:
+        """Базовые преобразования, подходящие для любого языка.
 
         Параметры
         ----------
-        array : Iterable[str]
-            Массив с текстом для преобразования.
+        array : List[str]
+            Список с текстом, который нужно преобразовать.
             Например,
             ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
 
@@ -100,6 +101,88 @@ class BaseTransformation(ABC):
         array: List[str]
             Список с применёнными преобразованиями текста.
         """
+
+    @abstractmethod
+    def _custom_transform(self, array: List[str]) -> List[str]:
+        """Новые преобразования. Создан для переопределения в
+        будущих классах.
+
+        Параметры
+        ----------
+        array : List[str]
+            Список с текстом, который нужно преобразовать.
+            Например,
+            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
+
+        Returns
+        -------
+        array: List[str]
+            Список с применёнными преобразованиями текста.
+        """
+
+    def transform(self, array: Iterable[str]) -> List[str]:
+        """Применение всех преобразований к массиву.
+
+        Параметры
+        ----------
+        array : Iterable[str]
+            Массив с текстом, который нужно преобразовать.
+            Например,
+            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
+
+        Returns
+        -------
+        array: List[str]
+            Список с применёнными преобразованиями текста.
+        """
+        array = list(array)
+
+        array = self._base_transform(array)
+        array = self._custom_transform(array)
+        return array
+
+
+class BaseAugmentation(BaseTransformation):
+    """Абстрактный класс для аугментации текста."""
+
+    def __init__(self, seed: Union[None, int] = None):
+        self._seed = seed
+
+    def _sparse_input(
+            self,
+            arg: Union[bool, dict],
+            func: Callable,
+    ) -> Union[None, WrapperTransform]:
+        """"""
+        if isinstance(arg, bool):
+            if arg:
+                return WrapperTransform(func, seed=self._seed)
+            else:
+                return None
+        else:
+            return WrapperTransform(func, seed=self._seed, **arg)
+
+    def _one_transform(
+            self,
+            array: List[str],
+            transformation: Union[None, WrapperTransform],
+    ) -> List[str]:
+        """"""
+        if transformation:
+            lst = []
+            for text in array:
+                text = transformation.transform(text)
+                lst.append(text)
+            array = lst
+        return array
+
+    @abstractmethod
+    def _base_transform(self, array: List[str]) -> List[str]:
+        pass
+
+    @abstractmethod
+    def _custom_transform(self, array: List[str]) -> List[str]:
+        pass
 
 
 class BaseModel(ABC):

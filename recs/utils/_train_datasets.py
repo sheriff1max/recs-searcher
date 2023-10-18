@@ -1,5 +1,5 @@
 """
-Кастомные датасеты, унаследованные от PyTorch.
+Кастомные датасеты для обучения, унаследованные от PyTorch.
 """
 
 
@@ -12,7 +12,7 @@ from torch.utils.data import Dataset
 
 from sentence_transformers import SentenceTransformer, models, InputExample, losses
 
-from base import BaseTransformation
+from base import BaseAugmentation
 
 
 class SentenceTransformerDataset(Dataset):
@@ -21,11 +21,10 @@ class SentenceTransformerDataset(Dataset):
     def __init__(
             self,
             array: Iterable[str],
-            augmentation_misspelling: Union[BaseTransformation, \
-                                            Callable[[str], str]] = lambda x: x
+            augmentation_transform: Union[None, List[BaseAugmentation]] = None
     ):
         self._array = [[text, text] for text in array]
-        self._augmentation_misspelling = augmentation_misspelling
+        self._augmentation_transform = augmentation_transform
 
     def __len__(self):
         return len(self.array)
@@ -35,6 +34,9 @@ class SentenceTransformerDataset(Dataset):
         lst = self.array[idx]
 
         original_text = lst[0]
-        similar_text = self._augmentation_misspelling(lst[1])
+        augmenation_text = lst[1]
+        if self._augmentation_transform:
+            for augmentation_func in self._augmentation_transform:
+                augmenation_text = augmentation_func.transform(augmenation_text)
 
-        return InputExample(texts=[original_text, similar_text])
+        return InputExample(texts=[original_text, augmenation_text])

@@ -17,6 +17,15 @@ from ._metrics import (
     _cosine_distance
 )
 
+from ._train_datasets import (
+    SentenceTransformerDataset
+)
+
+from ._wrapper import (
+    wrapper_func_seed,
+    WrapperTransform,
+)
+
 __all__ = [
     '_text_lower',
     '_remove_punct',
@@ -27,4 +36,9 @@ __all__ = [
     '_remove_emoji',
 
     '_cosine_distance',
+
+    'SentenceTransformerDataset',
+
+    'wrapper_func_seed',
+    'WrapperTransform',
 ]
