@@ -12,6 +12,9 @@ from inspect import getmembers, isfunction
 import pandas as pd
 import numpy as np
 
+from torch.utils.data import Dataset
+from sentence_transformers import InputExample
+
 from utils import _metrics
 from utils import WrapperTransform
 
@@ -260,3 +263,30 @@ class BaseSearch(ABC):
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
         """"""
+
+
+class BaseDataset(Dataset):
+    """"""
+
+    def __init__(
+            self,
+            array: Iterable[str],
+            augmentation_transform: Union[None, List[BaseTransformation]] = None,
+    ):
+        self._array = [[text, text] for text in array]
+        self._augmentation_transform = augmentation_transform
+
+    def __len__(self):
+        return len(self._array)
+
+    def __getitem__(self, idx):
+
+        lst = self._array[idx]
+
+        original_text = lst[0]
+        augmenation_text = lst[1]
+        if self._augmentation_transform:
+            for augmentation_func in self._augmentation_transform:
+                augmenation_text = augmentation_func.transform(augmenation_text)
+
+        return InputExample(texts=[original_text, augmenation_text])

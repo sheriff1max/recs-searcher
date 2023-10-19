@@ -7,8 +7,7 @@ from typing import Iterable, List, Callable, Union, Type, Dict
 import pickle
 import os
 
-from base import BaseModel, BaseTransformation
-from utils import SentenceTransformerDataset
+from base import BaseModel, BaseTransformation, BaseDataset
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -22,7 +21,6 @@ from torch.utils.data import Dataset, DataLoader
 from torch.optim import Optimizer
 from torch.optim import AdamW
 from torch import nn
-
 
 import numpy as np
 
@@ -225,7 +223,7 @@ class SentenceTransformerWrapperModel(BaseModel):
     def fit(
             self,
             array: Iterable[str],
-            augmentation_func: Union[None, BaseTransformation] = None,
+            augmentation_transform: Union[None, List[BaseTransformation]] = None,
 
             shuffle=True,
             batch_size=32,
@@ -251,7 +249,7 @@ class SentenceTransformerWrapperModel(BaseModel):
     ) -> object:
         """"""
 
-        train_dataset = SentenceTransformerDataset(array)
+        train_dataset = BaseDataset(array, augmentation_transform)
         train_dataloader = DataLoader(
             train_dataset,
             shuffle=shuffle,
@@ -286,3 +284,9 @@ class SentenceTransformerWrapperModel(BaseModel):
 
         array = self._model.encode(array)
         return np.array(array)
+
+    def load(self, filename: str) -> object:
+        """"""
+
+    def save(self, filename: str) -> object:
+        """"""

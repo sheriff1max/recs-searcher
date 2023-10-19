@@ -1,5 +1,5 @@
 """
-`recs.utils` модуль включает различные утилиты.
+`recs.utils` модуль включает различные инструменты.
 """
 
 
@@ -15,10 +15,6 @@ from ._clear_text import (
 
 from ._metrics import (
     _cosine_distance
-)
-
-from ._train_datasets import (
-    SentenceTransformerDataset
 )
 
 from ._wrapper import (
