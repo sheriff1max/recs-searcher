@@ -1,7 +1,11 @@
 from ._search import (
-    ForCycleSearch
+    ForCycleSearch,
+    TheFuzzSearch,
+    FaissSearch,
 )
 
 __all__ = [
-    'ForCycleSearch'
+    'ForCycleSearch',
+    'TheFuzzSearch',
+    'FaissSearch',
 ]

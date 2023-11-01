@@ -18,7 +18,6 @@ from ._metrics import (
 )
 
 from ._wrapper import (
-    wrapper_func_seed,
     WrapperTransform,
 )
 
@@ -35,6 +34,5 @@ __all__ = [
 
     'SentenceTransformerDataset',
 
-    'wrapper_func_seed',
     'WrapperTransform',
 ]

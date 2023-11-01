@@ -14,7 +14,7 @@ def _get_abbreviation(
     в одно слово. Нужно для сокращений НАИМЕНОВАНИЙ.
     Например, `Harry Potter` -> `HP`. """
     text = text.split(sep)
-    changed_text = [word[0] for word in text]
+    changed_text = [word[0] for word in text if word]
     changed_text = ''.join(changed_text)
     return changed_text
 

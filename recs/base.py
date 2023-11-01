@@ -13,10 +13,9 @@ import pandas as pd
 import numpy as np
 
 from torch.utils.data import Dataset
-from sentence_transformers import InputExample
 
-from utils import _metrics
-from utils import WrapperTransform
+from dataset import _dataframes
+from utils import _metrics, WrapperTransform
 
 
 CUR_PATH = os.path.dirname(__file__)
@@ -188,6 +187,45 @@ class BaseAugmentation(BaseTransformation):
         pass
 
 
+class BaseDataset(Dataset):
+    """Абстрактный класс для обёртки датасетов.
+
+    Примечение
+    -------
+    _dict_callable_datasets : dict[str, Callable]
+            Словарь, значением является функция загрузка датасета,
+            а ключом является название функции для загрузка датасета.
+
+            Например,
+            {'load_city_russia': load_city_russia, }.
+
+            Данный словарь пополняется автоматически, собирая
+            все функции из `dataset._dataframes`
+    """
+
+    _dict_callable_datasets = {
+        metric_name: metric_func \
+            for metric_name, metric_func in getmembers(_dataframes, isfunction)
+            if metric_name[0] != '_'
+    }
+
+    def __init__(
+            self,
+            array: Union[str, Iterable[str]],
+    ):
+        if isinstance(array, str):
+            self._array = self._dict_callable_datasets[array]().target.values
+        else:
+            self._array = array
+
+    def __len__(self):
+        return len(self._array)
+
+    @abstractmethod
+    def __getitem__(self, idx):
+        """Получение элемента по индексу"""
+
+
 class BaseModel(ABC):
     """Абстрактный класс для моделей эмбеддингов."""
 
@@ -214,7 +252,7 @@ class BaseModel(ABC):
         return self
 
     @abstractmethod
-    def fit(self, array: Iterable[str]) -> object:
+    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
         """"""
 
     @abstractmethod
@@ -228,7 +266,16 @@ class BaseModel(ABC):
 
 class BaseSearch(ABC):
     """Абстрактный класс для получения результатов
-    поиска наиболее схожего текста из БД.
+    поиска наиболее схожего текста из БД."""
+
+    @abstractmethod
+    def search(self, text: str, k: int) -> pd.DataFrame:
+        """"""
+
+
+class BaseEmbeddingSearch(BaseSearch):
+    """Абстрактный класс для получения результатов
+    поиска наиболее схожего текста из БД на основе эмбеддингов.
 
     Примечение
     -------
@@ -250,43 +297,16 @@ class BaseSearch(ABC):
     def __init__(
             self,
             model: BaseModel,
-            embedding_data,
-            name_data: Iterable[str],
+            embedding_database,
+            original_array: Iterable[str],
             metric: Union[str, Callable],
     ):
         self._model = model
-        self._embedding_data = embedding_data
-        self._name_data = name_data
-        self._metric = self._dict_callable_metrics[metric] \
+        self._embedding_database = embedding_database
+        self._original_array = original_array
+        self._metric = self._dict_callable_metrics.get(metric, None) \
             if isinstance(metric, str) else metric
 
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
         """"""
-
-
-class BaseDataset(Dataset):
-    """"""
-
-    def __init__(
-            self,
-            array: Iterable[str],
-            augmentation_transform: Union[None, List[BaseTransformation]] = None,
-    ):
-        self._array = [[text, text] for text in array]
-        self._augmentation_transform = augmentation_transform
-
-    def __len__(self):
-        return len(self._array)
-
-    def __getitem__(self, idx):
-
-        lst = self._array[idx]
-
-        original_text = lst[0]
-        augmenation_text = lst[1]
-        if self._augmentation_transform:
-            for augmentation_func in self._augmentation_transform:
-                augmenation_text = augmentation_func.transform(augmenation_text)
-
-        return InputExample(texts=[original_text, augmenation_text])

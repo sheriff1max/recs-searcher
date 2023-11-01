@@ -1,5 +1,5 @@
 """
-Модели для создания эмбеддингов
+Модели для создания эмбеддингов.
 """
 
 
@@ -8,6 +8,7 @@ import pickle
 import os
 
 from base import BaseModel, BaseTransformation, BaseDataset
+from dataset import SentenceTransformerDataset
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -77,7 +78,7 @@ class TfidfWrapperModel(BaseModel):
             sublinear_tf=sublinear_tf,
         )
 
-    def fit(self, array: Iterable[str]) -> object:
+    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
         self._model.fit(array)
         return self
 
@@ -149,7 +150,7 @@ class FastTextWrapperModel(BaseModel):
         self._max_final_vocab=max_final_vocab
         self._shrink_windows=shrink_windows
 
-    def fit(self, array: Iterable[str]) -> object:
+    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
         
         # TODO:
         array_tokenized = [text.split() for text in array]
@@ -222,7 +223,7 @@ class SentenceTransformerWrapperModel(BaseModel):
 
     def fit(
             self,
-            array: Iterable[str],
+            array: Union[BaseDataset, Iterable[str]],
             augmentation_transform: Union[None, List[BaseTransformation]] = None,
 
             shuffle=True,
@@ -249,7 +250,11 @@ class SentenceTransformerWrapperModel(BaseModel):
     ) -> object:
         """"""
 
-        train_dataset = BaseDataset(array, augmentation_transform)
+        if isinstance(array, BaseDataset):
+            train_dataset = array
+        else:
+            train_dataset = SentenceTransformerDataset(array, augmentation_transform)
+
         train_dataloader = DataLoader(
             train_dataset,
             shuffle=shuffle,

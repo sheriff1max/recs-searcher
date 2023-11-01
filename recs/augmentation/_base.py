@@ -22,7 +22,7 @@ from augmentation._structure import (
 
 
 class MisspellingAugmentation(BaseAugmentation):
-    """Класс создания ошибок в предложении.
+    """Класс создания ошибок в словах предложения.
     
     Примечание
     ----------
@@ -65,12 +65,22 @@ class MisspellingAugmentation(BaseAugmentation):
 
 
 class StructureAugmentation(BaseAugmentation):
-    """"""
+    """Класс создания ошибок в словах предложения.
+    
+    Примечание
+    ----------
+    Каждый параметр представляет из себя либо bool, либо dict:
+    - bool:
+        - True: используется преобразование с базовыми параметрами.
+        - False: не используется преобразование.
+    - dict: используется преобразование с данными параметрами, определёнными
+    в словаре.
+    """
 
     def __init__(
             self,
-            delete_words: Union[bool, dict] = True,
-            get_abbreviation: Union[bool, dict] = True,
+            delete_words: Union[bool, dict] = False,
+            get_abbreviation: Union[bool, dict] = False,
             shuffle_words: Union[bool, dict] = True,
             seed: Union[None, int] = None,
     ):
