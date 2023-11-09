@@ -41,7 +41,7 @@ class MisspellingAugmentation(BaseAugmentation):
             delete_syms: Union[bool, dict] = True,
             multiply_syms: Union[bool, dict] = True,
             swap_syms: Union[bool, dict] = True,
-            seed: Union[None, int] = None,
+            seed: int = 0,
     ):
         super().__init__(seed=seed)
         self._add_syms = self._sparse_input(add_syms, _add_syms)

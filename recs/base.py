@@ -147,7 +147,8 @@ class BaseTransformation(ABC):
 class BaseAugmentation(BaseTransformation):
     """Абстрактный класс для аугментации текста."""
 
-    def __init__(self, seed: Union[None, int] = None):
+    def __init__(self, seed: int = 0):
+        self._start_seed = seed
         self._seed = seed
 
     def _sparse_input(
@@ -156,6 +157,7 @@ class BaseAugmentation(BaseTransformation):
             func: Callable,
     ) -> Union[None, WrapperTransform]:
         """"""
+        self._seed += 1
         if isinstance(arg, bool):
             if arg:
                 return WrapperTransform(func, seed=self._seed)
@@ -175,7 +177,9 @@ class BaseAugmentation(BaseTransformation):
             for text in array:
                 text = transformation.transform(text)
                 lst.append(text)
+                transformation.up_seed()
             array = lst
+            transformation.reset_seed()
         return array
 
     @abstractmethod
@@ -304,7 +308,7 @@ class BaseEmbeddingSearch(BaseSearch):
         self._model = model
         self._embedding_database = embedding_database
         self._original_array = original_array
-        self._metric = self._dict_callable_metrics.get(metric, None) \
+        self._metric = self._dict_callable_metrics.get(metric, metric) \
             if isinstance(metric, str) else metric
 
     @abstractmethod

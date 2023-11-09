@@ -26,14 +26,15 @@ def _delete_words(
         sep: str = ' '
 ) -> str:
     """"""
+    original_text = text.split(sep)
     changed_text = []
-    for word in text.split(sep):
+    for word in original_text:
 
         if word.isalpha() or not delete_only_alpha:
-            if random.random() < p:
+            if random.randrange(100) < p * 100 and len(original_text) != 1:
                 continue
         changed_text.append(word)
-    
+
     changed_text = ' '.join(changed_text)
     return changed_text
 

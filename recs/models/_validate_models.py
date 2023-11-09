@@ -32,17 +32,18 @@ class Validate:
     def _validate(self) -> None:
         """"""
 
-        for i in self._accuracy_top:
+        max_k = max(self._accuracy_top)
+        dict_true_for_k = {k: 0 for k in self._accuracy_top}
 
-            true = 0
-            for k in tqdm(range(len(self._original_array))):
-                augmentation_text = self._augmentation_array[k]
-                original_text = self._original_array[k]
+        for i in tqdm(range(len(self._original_array))):
+            augmentation_text = self._augmentation_array[i]
+            original_text = self._original_array[i]
 
-                top_i_df = self._searcher.search(augmentation_text, i)
+            top_i_df = self._searcher.search(augmentation_text, max_k)
 
-                if original_text in top_i_df.name.values:
-                    true += 1
-                    # print(augmentation_text, top_i_df.name.values)
+            for k in dict_true_for_k.keys():
+                if original_text in top_i_df.name.values[:k]:
+                    dict_true_for_k[k] += 1
 
-            print(f'Top {i}Acc = {true / len(self._original_array)}')
+        for k in dict_true_for_k.keys():
+            print(f'Top {k}Acc = {dict_true_for_k[k] / len(self._original_array)}')

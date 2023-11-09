@@ -17,7 +17,7 @@ ALPHABET['any'] = ''.join([alpha for alpha in ALPHABET.values()])
 
 def _change_syms(
         text: str,
-        p: float = 0.1,
+        p: float = 0.05,
         language: str = 'any',
         change_only_alpha: bool = True,
 ) -> str:
@@ -26,7 +26,7 @@ def _change_syms(
     for sym in text:
 
         if sym.isalpha() or not change_only_alpha:
-            if random.random() < p:
+            if random.randrange(100) < p * 100:
                 sym = random.choice(ALPHABET[language])
 
         changed_text += sym
@@ -35,7 +35,7 @@ def _change_syms(
 
 def _delete_syms(
         text: str,
-        p: float = 0.1,
+        p: float = 0.05,
         delete_only_alpha: bool = True,
 ) -> str:
     """"""
@@ -43,7 +43,7 @@ def _delete_syms(
     for sym in text:
 
         if sym.isalpha() or not delete_only_alpha:
-            if random.random() < p:
+            if random.randrange(100) < p * 100:
                 continue
 
         changed_text += sym
@@ -52,14 +52,14 @@ def _delete_syms(
 
 def _add_syms(
         text: str,
-        p: float = 0.1,
+        p: float = 0.05,
         language: str = 'any',
 ) -> str:
     """"""
     changed_text = ''
     for sym in text:
 
-        if random.random() < p:
+        if random.randrange(100) < p * 100:
             sym += random.choice(ALPHABET[language])
 
         changed_text += sym
@@ -68,7 +68,7 @@ def _add_syms(
 
 def _multiply_syms(
         text: str,
-        p: float = 0.1,
+        p: float = 0.05,
         count_multiply: int = 2,
         multiply_only_alpha: bool = True
 ) -> str:
@@ -77,7 +77,7 @@ def _multiply_syms(
     for sym in text:
 
         if sym.isalpha() or not multiply_only_alpha:
-            if random.random() < p:
+            if random.randrange(100) < p * 100:
                 sym = sym * count_multiply
 
         changed_text += sym
@@ -86,13 +86,13 @@ def _multiply_syms(
 
 def _swap_syms(
         text: str,
-        p: float = 0.1,
+        p: float = 0.05,
 ) -> str:
     """"""
     text = list(text)
     for i in range(0, len(text)-1):
 
-        if random.random() < p:
+        if random.randrange(100) < p * 100:
             text[i], text[i+1] = text[i+1], text[i]
     return ''.join(text)
 

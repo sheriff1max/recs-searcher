@@ -14,11 +14,17 @@ from ._clear_text import (
 )
 
 from ._metrics import (
-    _cosine_distance
+    _cosine_distance,
+    _euclidean_distance,
+    _inner_product_distance,
 )
 
 from ._wrapper import (
     WrapperTransform,
+)
+
+from ._log import (
+    _create_date_name,
 )
 
 __all__ = [
@@ -31,8 +37,12 @@ __all__ = [
     '_remove_emoji',
 
     '_cosine_distance',
+    '_euclidean_distance',
+    '_inner_product_distance',
 
     'SentenceTransformerDataset',
 
     'WrapperTransform',
+
+    '_create_date_name',
 ]

@@ -13,10 +13,11 @@ class WrapperTransform:
     def __init__(
             self,
             func: Callable,
-            seed: Union[None, int] = None,
+            seed: int = 0,
             **data,
     ):
         self._func = func
+        self._start_seed = seed
         self._seed = seed
         self._data = data
 
@@ -24,10 +25,16 @@ class WrapperTransform:
         """"""
         return _wrapper_func_seed(self._func, self._seed, text=text, **self._data)
 
+    def up_seed(self):
+        self._seed += 1
+
+    def reset_seed(self):
+        self._seed = self._start_seed
+
 
 def _wrapper_func_seed(
         func: Callable,
-        seed: Union[None, int] = None,
+        seed: int = 0,
         **data,
 ) -> str:
     """"""
