@@ -23,6 +23,8 @@ from torch.optim import Optimizer
 from torch.optim import AdamW
 from torch import nn
 
+from nltk.tokenize import word_tokenize
+
 import numpy as np
 
 
@@ -119,6 +121,8 @@ class FastTextWrapperModel(BaseModel):
             callbacks=(),
             max_final_vocab=None,
             shrink_windows=True,
+
+            tokenizer: Callable=word_tokenize,
     ):
         self._model = None
 
@@ -150,10 +154,10 @@ class FastTextWrapperModel(BaseModel):
         self._max_final_vocab=max_final_vocab
         self._shrink_windows=shrink_windows
 
+        self._tokenizer = tokenizer
+
     def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
-        
-        # TODO:
-        array_tokenized = [text.split() for text in array]
+        array_tokenized = self._tokenizer(array)
 
         self._model = FastText(
             array_tokenized,
@@ -186,17 +190,14 @@ class FastTextWrapperModel(BaseModel):
             max_final_vocab=self._max_final_vocab,
             shrink_windows=self._shrink_windows,            
         )
-
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
-
-        # TODO: заменить на норм токенизацию
-        array = [text.split() for text in array]
+        array_tokenized = self._tokenizer(array)
 
         array_list = []
 
-        for text_tokens in array:
+        for text_tokens in array_tokenized:
             vector = self._model.wv.get_sentence_vector(text_tokens)
             array_list.append(vector)
 

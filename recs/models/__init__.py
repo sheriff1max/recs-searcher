@@ -1,4 +1,4 @@
-from ._models import (
+from ._base import (
     TfidfWrapperModel,
     FastTextWrapperModel,
     SentenceTransformerWrapperModel,

@@ -1,4 +1,4 @@
-from ._search import (
+from ._base import (
     ForCycleSearch,
     TheFuzzSearch,
     NearestNeighborsSearch,

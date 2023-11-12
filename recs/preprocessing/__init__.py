@@ -1,4 +1,4 @@
-from ._clear import (
+from ._base_clear import (
     BaseCleaner,
 )
 
