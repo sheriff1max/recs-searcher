@@ -57,10 +57,10 @@ class BaseCleaner(BaseTransformation):
         array = self._one_transform(array, self._text_lower)
         array = self._one_transform(array, self._remove_punct)
         array = self._one_transform(array, self._remove_number)
-        array = self._one_transform(array, self._remove_whitespace)
         array = self._one_transform(array, self._remove_html_tag)
         array = self._one_transform(array, self._remove_url)
         array = self._one_transform(array, self._remove_emoji)
+        array = self._one_transform(array, self._remove_whitespace)
         return array
 
     def _custom_transform(self, array: List[str]) -> List[str]:

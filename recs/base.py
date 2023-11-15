@@ -13,8 +13,6 @@ import pandas as pd
 import numpy as np
 
 from torch.utils.data import Dataset
-
-from dataset import _dataframes
 from utils import _metrics, WrapperTransform
 
 
@@ -60,7 +58,7 @@ class BaseTransformation(ABC):
             func: Callable[[str], str],
     ) -> Union[None, Callable[[str], str]]:
         """Преобразуем полученные от пользователя аргументы
-        в нужный вил.
+        в нужный вид.
 
         Параметры
         ----------
@@ -193,34 +191,14 @@ class BaseAugmentation(BaseTransformation):
 
 class BaseDataset(Dataset):
     """Абстрактный класс для обёртки датасетов.
-
-    Примечение
-    -------
-    _dict_callable_datasets : dict[str, Callable]
-            Словарь, значением является функция загрузка датасета,
-            а ключом является название функции для загрузка датасета.
-
-            Например,
-            {'load_city_russia': load_city_russia, }.
-
-            Данный словарь пополняется автоматически, собирая
-            все функции из `dataset._dataframes`
+    Нужен для обучения нейронных сетей.
     """
-
-    _dict_callable_datasets = {
-        metric_name: metric_func \
-            for metric_name, metric_func in getmembers(_dataframes, isfunction)
-            if metric_name[0] != '_'
-    }
 
     def __init__(
             self,
-            array: Union[str, Iterable[str]],
+            array: Iterable[str],
     ):
-        if isinstance(array, str):
-            self._array = self._dict_callable_datasets[array]().target.values
-        else:
-            self._array = array
+        self._array = array
 
     def __len__(self):
         return len(self._array)
@@ -236,7 +214,6 @@ class BaseModel(ABC):
     def load(self, filename: str) -> object:
         """"""
         filename = PATH_SAVE_MODEL + '\\' + filename
-
         if '.pkl' not in filename:
             filename += '.pkl'
 
@@ -247,7 +224,6 @@ class BaseModel(ABC):
     def save(self, filename: str) -> object:
         """"""
         filename = PATH_SAVE_MODEL + '\\' + filename
-
         if '.pkl' not in filename:
             filename += '.pkl'
 
@@ -272,6 +248,14 @@ class BaseSearch(ABC):
     """Абстрактный класс для получения результатов
     поиска наиболее схожего текста из БД."""
 
+    def __init__(
+            self,
+            original_array: Iterable[str],
+            preprocessing: List[BaseTransformation],
+    ):
+        self._original_array = original_array
+        self._preprocessing = preprocessing
+
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
         """"""
@@ -280,36 +264,23 @@ class BaseSearch(ABC):
 class BaseEmbeddingSearch(BaseSearch):
     """Абстрактный класс для получения результатов
     поиска наиболее схожего текста из БД на основе эмбеддингов.
-
-    Примечение
-    -------
-    _dict_callable_metrics : dict[str, Callable]
-            Словарь, значением является функция подсчёта метрики,
-            а ключом является название функции для подсчёта метрики.
-
-            Например,
-            {'cosine_distance': cosine_distance, }.
-
-            Данный словарь пополняется автоматически, собирая
-            все функции из utils._metrics
     """
-    _dict_callable_metrics = {
-        metric_name: metric_func \
-            for metric_name, metric_func in getmembers(_metrics, isfunction)
-    }
 
     def __init__(
             self,
             model: BaseModel,
             embedding_database,
             original_array: Iterable[str],
-            metric: Union[str, Callable],
+            preprocessing: List[BaseTransformation],
+            metric: str,
     ):
+        super().__init__(
+            original_array=original_array,
+            preprocessing=preprocessing,
+        )
         self._model = model
         self._embedding_database = embedding_database
-        self._original_array = original_array
-        self._metric = self._dict_callable_metrics.get(metric, metric) \
-            if isinstance(metric, str) else metric
+        self._metric = metric
 
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:

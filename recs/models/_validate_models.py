@@ -3,7 +3,7 @@
 """
 
 
-from typing import Iterable, Union, List
+from typing import Iterable, Union, List, Dict
 from base import BaseSearch, BaseTransformation, BaseDataset
 
 from tqdm import tqdm
@@ -12,38 +12,35 @@ from tqdm import tqdm
 class Validate:
     """Класс валидации моделей."""
 
-    def __init__(
-            self,
+    def __new__(
+            cls,
             searcher: BaseSearch,
             augmentation_transforms: List[BaseTransformation],
             accuracy_top: List[int] = [1, 5, 10],
-    ):
-        self._searcher = searcher
-        self._original_array = searcher._original_array
-
-        self._augmentation_array = searcher._original_array
-        for augmentation_transform in augmentation_transforms:
-            self._augmentation_array = augmentation_transform.transform(self._augmentation_array)
-
-        self._accuracy_top = accuracy_top
-
-        self._validate()
-
-    def _validate(self) -> None:
+    ) -> Dict[int, float]:
         """"""
+        original_array = searcher._original_array
 
-        max_k = max(self._accuracy_top)
-        dict_true_for_k = {k: 0 for k in self._accuracy_top}
+        augmentation_array = searcher._original_array
+        for augmentation_transform in augmentation_transforms:
+            augmentation_array = augmentation_transform.transform(augmentation_array)
 
-        for i in tqdm(range(len(self._original_array))):
-            augmentation_text = self._augmentation_array[i]
-            original_text = self._original_array[i]
+        max_k = max(accuracy_top)
+        dict_true_for_k = {k: 0 for k in accuracy_top}
 
-            top_i_df = self._searcher.search(augmentation_text, max_k)
+        for i in tqdm(range(len(original_array))):
+            augmentation_text = augmentation_array[i]
+            original_text = original_array[i]
+
+            top_i_df = searcher.search(augmentation_text, max_k)
 
             for k in dict_true_for_k.keys():
                 if original_text in top_i_df.name.values[:k]:
                     dict_true_for_k[k] += 1
 
+        metrics = {}
         for k in dict_true_for_k.keys():
-            print(f'Top {k}Acc = {dict_true_for_k[k] / len(self._original_array)}')
+            accuracy_k = dict_true_for_k[k] / len(original_array)
+            metrics[k] = accuracy_k
+            print(f'Top {k}Acc = {accuracy_k}')
+        return metrics

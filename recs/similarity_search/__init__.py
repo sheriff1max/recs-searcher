@@ -1,5 +1,4 @@
 from ._base import (
-    ForCycleSearch,
     TheFuzzSearch,
     NearestNeighborsSearch,
     FaissSearch,
@@ -7,7 +6,6 @@ from ._base import (
 )
 
 __all__ = [
-    'ForCycleSearch',
     'TheFuzzSearch',
     'NearestNeighborsSearch',
     'FaissSearch',

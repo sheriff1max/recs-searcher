@@ -5,12 +5,12 @@
 
 import random
 import string
-from typing import Union, Callable
+from typing import Union, Callable, Literal
 
 
 ALPHABET = {
-    'ru': ''.join(list(map(chr, range(ord('А'), ord('я')+1)))),
-    'eng': string.ascii_letters,
+    'russian': ''.join(list(map(chr, range(ord('А'), ord('я')+1)))),
+    'english': string.ascii_letters,
 }
 ALPHABET['any'] = ''.join([alpha for alpha in ALPHABET.values()])
 
@@ -18,7 +18,7 @@ ALPHABET['any'] = ''.join([alpha for alpha in ALPHABET.values()])
 def _change_syms(
         text: str,
         p: float = 0.05,
-        language: str = 'any',
+        language: Literal['russian', 'english', 'any'] = 'any',
         change_only_alpha: bool = True,
 ) -> str:
     """"""
@@ -53,7 +53,7 @@ def _delete_syms(
 def _add_syms(
         text: str,
         p: float = 0.05,
-        language: str = 'any',
+        language: Literal['russian', 'english', 'any'] = 'any',
 ) -> str:
     """"""
     changed_text = ''

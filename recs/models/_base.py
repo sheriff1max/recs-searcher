@@ -157,7 +157,7 @@ class FastTextWrapperModel(BaseModel):
         self._tokenizer = tokenizer
 
     def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
-        array_tokenized = self._tokenizer(array)
+        array_tokenized = [self._tokenizer(i) for i in array]
 
         self._model = FastText(
             array_tokenized,
@@ -193,7 +193,7 @@ class FastTextWrapperModel(BaseModel):
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
-        array_tokenized = self._tokenizer(array)
+        array_tokenized = [self._tokenizer(i) for i in array]
 
         array_list = []
 

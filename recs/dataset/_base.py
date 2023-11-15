@@ -5,8 +5,7 @@
 
 from typing import Iterable, Union, List
 
-from base import BaseModel, BaseTransformation, BaseDataset
-
+from base import BaseTransformation, BaseDataset
 from sentence_transformers import InputExample
 
 
@@ -33,7 +32,6 @@ class SentenceTransformerDataset(BaseDataset):
         if self._augmentation_transform:
             for augmentation_func in self._augmentation_transform:
                 augmenation_text = augmentation_func.transform([augmenation_text])[0]
-
         return InputExample(texts=[original_text, augmenation_text])
 
 
@@ -50,6 +48,5 @@ class StandartDataset(BaseDataset):
         return len(self._array)
 
     def __getitem__(self, idx):
-
         text = self._array[idx]
         return text

@@ -14,7 +14,9 @@ def _text_lower(text: str) -> str:
 
 def _remove_punct(text: str) -> str:
     """"""
-    return text.translate(str.maketrans('', '', string.punctuation))
+    # return text.translate(str.maketrans('', '', string.punctuation))
+    whitespaces = ''.join([' ' for _ in range(len(string.punctuation))])
+    return text.translate(str.maketrans(string.punctuation, whitespaces, ''))
 
 
 def _remove_number(text: str) -> str:
@@ -24,6 +26,7 @@ def _remove_number(text: str) -> str:
 
 def _remove_whitespace(text: str) -> str:
     """"""
+    text = text.replace('  ', ' ')
     return text.strip()
 
 
