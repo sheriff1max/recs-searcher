@@ -3,9 +3,9 @@
 Нужно для тестирования и обучения.
 """
 
-from typing import Iterable, Union, Callable, List, Dict
+from typing import Iterable, Union, Callable, List, Dict, Optional
 
-from base import BaseAugmentation
+from base import BaseTransformation
 
 from augmentation._misspelling import (
     _add_syms,
@@ -21,7 +21,7 @@ from augmentation._structure import (
 )
 
 
-class MisspellingAugmentation(BaseAugmentation):
+class MisspellingAugmentation(BaseTransformation):
     """Класс создания ошибок в словах предложения.
     
     Примечание
@@ -41,7 +41,7 @@ class MisspellingAugmentation(BaseAugmentation):
             delete_syms: Union[bool, dict] = True,
             multiply_syms: Union[bool, dict] = True,
             swap_syms: Union[bool, dict] = True,
-            seed: int = 0,
+            seed: Optional[int] = None,
     ):
         super().__init__(seed=seed)
         self._add_syms = self._sparse_input(add_syms, _add_syms)
@@ -64,7 +64,7 @@ class MisspellingAugmentation(BaseAugmentation):
         return array
 
 
-class StructureAugmentation(BaseAugmentation):
+class StructureAugmentation(BaseTransformation):
     """Класс создания ошибок в словах предложения.
     
     Примечание
@@ -82,7 +82,7 @@ class StructureAugmentation(BaseAugmentation):
             delete_words: Union[bool, dict] = False,
             get_abbreviation: Union[bool, dict] = False,
             shuffle_words: Union[bool, dict] = True,
-            seed: Union[None, int] = None,
+            seed: Optional[int] = None,
     ):
         super().__init__(seed=seed)
         self._delete_words = self._sparse_input(delete_words, _delete_words)

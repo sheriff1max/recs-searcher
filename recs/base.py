@@ -6,8 +6,9 @@
 from abc import ABC, abstractmethod
 import os
 import pickle
-from typing import Union, Callable, Iterable, List
+from typing import Union, Callable, Iterable, List, Optional
 from inspect import getmembers, isfunction
+import random
 
 import pandas as pd
 import numpy as np
@@ -24,6 +25,9 @@ if not os.path.exists(PATH_SAVE_MODEL):
 
 class BaseTransformation(ABC):
     """Абстрактный класс для трансформаторов текста."""
+
+    def __init__(self, seed: Optional[int] = None):
+        self._seed = seed
 
     def _one_transform(
             self,
@@ -54,9 +58,9 @@ class BaseTransformation(ABC):
 
     def _sparse_input(
             self,
-            arg: Union[bool, Callable[[str], str]],
+            arg: Union[bool, dict, Callable],
             func: Callable[[str], str],
-    ) -> Union[None, Callable[[str], str]]:
+    ) -> Optional[Callable]:
         """Преобразуем полученные от пользователя аргументы
         в нужный вид.
 
@@ -82,6 +86,10 @@ class BaseTransformation(ABC):
                 return func
             else:
                 return None
+
+        elif isinstance(arg, dict):
+            return WrapperTransform(func, **arg).transform
+
         else:
             return arg
 
@@ -137,56 +145,11 @@ class BaseTransformation(ABC):
         """
         array = list(array)
 
+        random.seed(self._seed)
         array = self._base_transform(array)
+        random.seed(self._seed)
         array = self._custom_transform(array)
         return array
-
-
-class BaseAugmentation(BaseTransformation):
-    """Абстрактный класс для аугментации текста."""
-
-    def __init__(self, seed: int = 0):
-        self._start_seed = seed
-        self._seed = seed
-
-    def _sparse_input(
-            self,
-            arg: Union[bool, dict],
-            func: Callable,
-    ) -> Union[None, WrapperTransform]:
-        """"""
-        self._seed += 1
-        if isinstance(arg, bool):
-            if arg:
-                return WrapperTransform(func, seed=self._seed)
-            else:
-                return None
-        else:
-            return WrapperTransform(func, seed=self._seed, **arg)
-
-    def _one_transform(
-            self,
-            array: List[str],
-            transformation: Union[None, WrapperTransform],
-    ) -> List[str]:
-        """"""
-        if transformation:
-            lst = []
-            for text in array:
-                text = transformation.transform(text)
-                lst.append(text)
-                transformation.up_seed()
-            array = lst
-            transformation.reset_seed()
-        return array
-
-    @abstractmethod
-    def _base_transform(self, array: List[str]) -> List[str]:
-        pass
-
-    @abstractmethod
-    def _custom_transform(self, array: List[str]) -> List[str]:
-        pass
 
 
 class BaseDataset(Dataset):
@@ -206,6 +169,15 @@ class BaseDataset(Dataset):
     @abstractmethod
     def __getitem__(self, idx):
         """Получение элемента по индексу"""
+
+    def append(self, text: str) -> Optional[bool]:
+        """"""
+        if isinstance(self._array, list):
+            self._array.append(text)
+        elif isinstance(self._array, np.ndarray):
+            np.append(self._array, text)
+        else:
+            return False
 
 
 class BaseModel(ABC):

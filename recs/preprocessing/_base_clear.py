@@ -31,6 +31,7 @@ class BaseCleaner(BaseTransformation):
             remove_url: Union[bool, Callable[[str], str]] = True,
             remove_emoji: Union[bool, Callable[[str], str]] = True,
     ):
+        super().__init__()
         self._text_lower = self._sparse_input(text_lower, _text_lower)
         self._remove_punct = self._sparse_input(remove_punct, _remove_punct)
         self._remove_number = self._sparse_input(remove_number, _remove_number)

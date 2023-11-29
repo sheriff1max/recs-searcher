@@ -3,7 +3,7 @@
 """
 
 
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 import random
 
 
@@ -13,7 +13,7 @@ class WrapperTransform:
     def __init__(
             self,
             func: Callable,
-            seed: int = 0,
+            seed: Optional[int] = None,
             **data,
     ):
         self._func = func
@@ -34,7 +34,7 @@ class WrapperTransform:
 
 def _wrapper_func_seed(
         func: Callable,
-        seed: int = 0,
+        seed: Optional[int] = None,
         **data,
 ) -> str:
     """"""

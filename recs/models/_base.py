@@ -200,7 +200,6 @@ class FastTextWrapperModel(BaseModel):
         for text_tokens in array_tokenized:
             vector = self._model.wv.get_sentence_vector(text_tokens)
             array_list.append(vector)
-
         return np.array(array_list)
 
 
@@ -217,26 +216,19 @@ class SentenceTransformerWrapperModel(BaseModel):
     def __init__(
             self,
             name_model: str = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
-            train_loss: Type[nn.Module] = losses.MultipleNegativesRankingLoss
-    ):
-        self._model = SentenceTransformer(name_model)
-        self._train_loss = train_loss(model=self._model)
-
-    def fit(
-            self,
-            array: Union[BaseDataset, Iterable[str]],
+            train_loss: Type[nn.Module] = losses.MultipleNegativesRankingLoss,
             augmentation_transform: Union[None, List[BaseTransformation]] = None,
 
             shuffle=True,
             batch_size=32,
 
             evaluator: SentenceEvaluator = None,
-            epochs: int = 1,
+            epochs: int = 5,
             steps_per_epoch = None,
             scheduler: str = 'WarmupLinear',
             warmup_steps: int = 10000,
             optimizer_class: Type[Optimizer] = AdamW,
-            optimizer_params : Dict[str, object]= {'lr': 2e-5},
+            optimizer_params : Dict[str, object]= {'lr': 2e-2},
             weight_decay: float = 0.01,
             evaluation_steps: int = 0,
             output_path: str = None,
@@ -247,42 +239,66 @@ class SentenceTransformerWrapperModel(BaseModel):
             show_progress_bar: bool = True,
             checkpoint_path: str = None,
             checkpoint_save_steps: int = 500,
-            checkpoint_save_total_limit: int = 0
-    ) -> object:
+            checkpoint_save_total_limit: int = 0,
+    ):
+        self._model = SentenceTransformer(name_model)
+        self._train_loss = train_loss(model=self._model)
+
+        self._augmentation_transform = augmentation_transform
+        self._shuffle = shuffle
+        self._batch_size = batch_size
+        self._evaluator = evaluator
+        self._epochs = epochs
+        self._steps_per_epoch = steps_per_epoch
+        self._scheduler = scheduler
+        self._warmup_steps = warmup_steps
+        self._optimizer_class = optimizer_class
+        self._optimizer_params = optimizer_params
+        self._weight_decay = weight_decay
+        self._evaluation_steps = evaluation_steps
+        self._output_path = output_path
+        self._save_best_model = save_best_model
+        self._max_grad_norm = max_grad_norm
+        self._use_amp = use_amp
+        self._callback = callback
+        self._show_progress_bar = show_progress_bar
+        self._checkpoint_path = checkpoint_path
+        self._checkpoint_save_steps = checkpoint_save_steps
+        self._checkpoint_save_total_limit = checkpoint_save_total_limit
+
+    def fit(self, array: Union[SentenceTransformerDataset, Iterable[str]]) -> object:
         """"""
 
-        if isinstance(array, BaseDataset):
-            train_dataset = array
-        else:
-            train_dataset = SentenceTransformerDataset(array, augmentation_transform)
+        if not isinstance(array, SentenceTransformerDataset):
+            train_dataset = SentenceTransformerDataset(array, self._augmentation_transform)
 
         train_dataloader = DataLoader(
             train_dataset,
-            shuffle=shuffle,
-            batch_size=batch_size
+            shuffle=self._shuffle,
+            batch_size=self._batch_size
         )
 
         self._model.fit(
             train_objectives=[(train_dataloader, self._train_loss)],
 
-            evaluator=evaluator,
-            epochs=epochs,
-            steps_per_epoch=steps_per_epoch,
-            scheduler=scheduler,
-            warmup_steps=warmup_steps,
-            optimizer_class=optimizer_class,
-            optimizer_params=optimizer_params,
-            weight_decay=weight_decay,
-            evaluation_steps=evaluation_steps,
-            output_path=output_path,
-            save_best_model=save_best_model,
-            max_grad_norm=max_grad_norm,
-            use_amp=use_amp,
-            callback=callback,
-            show_progress_bar=show_progress_bar,
-            checkpoint_path=checkpoint_path,
-            checkpoint_save_steps=checkpoint_save_steps,
-            checkpoint_save_total_limit=checkpoint_save_total_limit
+            evaluator=self._evaluator,
+            epochs=self._epochs,
+            steps_per_epoch=self._steps_per_epoch,
+            scheduler=self._scheduler,
+            warmup_steps=self._warmup_steps,
+            optimizer_class=self._optimizer_class,
+            optimizer_params=self._optimizer_params,
+            weight_decay=self._weight_decay,
+            evaluation_steps=self._evaluation_steps,
+            output_path=self._output_path,
+            save_best_model=self._save_best_model,
+            max_grad_norm=self._max_grad_norm,
+            use_amp=self._use_amp,
+            callback=self._callback,
+            show_progress_bar=self._show_progress_bar,
+            checkpoint_path=self._checkpoint_path,
+            checkpoint_save_steps=self._checkpoint_save_steps,
+            checkpoint_save_total_limit=self._checkpoint_save_total_limit
         )
         return self
 
@@ -290,9 +306,3 @@ class SentenceTransformerWrapperModel(BaseModel):
 
         array = self._model.encode(array)
         return np.array(array)
-
-    def load(self, filename: str) -> object:
-        """"""
-
-    def save(self, filename: str) -> object:
-        """"""

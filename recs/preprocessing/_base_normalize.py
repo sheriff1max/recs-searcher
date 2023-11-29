@@ -28,6 +28,7 @@ class BaseNormalizer(BaseTransformation):
             number_extract: Union[bool, Callable[[str], str]] = True,
             lemmatize: Union[bool, Callable[[str], str]] = True,
     ):
+        super().__init__()
         if language == 'russian':
             _number_extractor = NumberExtractor().replace_groups
         elif language == 'english':
