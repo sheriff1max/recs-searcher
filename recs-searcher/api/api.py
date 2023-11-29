@@ -117,7 +117,7 @@ class Pipeline:
 
     def save(self, filename: str) -> object:
         """"""
-        filename = PATH_SAVE_PIPELINE + '\\' + filename
+        filename = os.path.join(PATH_SAVE_PIPELINE, filename)
         if '.pkl' not in filename:
             filename += '.pkl'
 
@@ -162,7 +162,7 @@ class Pipeline:
 
 def load_pipeline(filename: str) -> Pipeline:
     """"""
-    filename = PATH_SAVE_PIPELINE + '\\' + filename
+    filename = os.path.join(PATH_SAVE_PIPELINE, filename)
     if '.pkl' not in filename:
         filename += '.pkl'
 

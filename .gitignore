@@ -1,6 +1,6 @@
 venv/
-recs/models/weights/
-recs/api/pipelines/
+recs-searcher/models/weights/
+recs-searcher/api/pipelines/
 .ipynb_checkpoints
 .git
 __pycache__
