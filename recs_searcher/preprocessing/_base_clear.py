@@ -5,9 +5,9 @@
 
 from typing import Iterable, Union, Callable, List
 
-from base import BaseTransformation
+from ..base import BaseTransformation
 
-from preprocessing._clear_text import (
+from ._clear_text import (
     _text_lower,
     _remove_punct,
     _remove_number,

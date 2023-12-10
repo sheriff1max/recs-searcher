@@ -8,9 +8,9 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from utils import _create_date_name
+from ..utils import _create_date_name
 
-from base import BaseSearch, BaseEmbeddingSearch, BaseModel, BaseTransformation
+from ..base import BaseSearch, BaseEmbeddingSearch, BaseModel, BaseTransformation
 from thefuzz import process
 import faiss
 import chromadb

@@ -3,24 +3,19 @@
 
 from typing import List, Iterable, Dict, Type, Union, Optional
 
-from base import(
+from ..base import(
     BaseDataset,
     BaseTransformation,
     BaseModel,
     BaseSearch,
     BaseEmbeddingSearch,
 )
-from models import Validate
+from ..models import Validate
 
 import numpy as np
 import pandas as pd
 import os
 import pickle
-
-CUR_PATH = os.path.dirname(__file__)
-PATH_SAVE_PIPELINE = os.path.join(CUR_PATH, 'pipelines')
-if not os.path.exists(PATH_SAVE_PIPELINE):
-    os.mkdir(PATH_SAVE_PIPELINE)
 
 
 class Pipeline:
@@ -111,17 +106,22 @@ class Pipeline:
                 preprocessing=preprocessing,
             )
 
-    def load(self, filename: str) -> object:
+    def load(self, path_save: str, filename: str) -> object:
         """"""
-        return load_pipeline(filename)
+        path = os.path.join(path_save, filename)
+        self = load_pipeline(path)
+        return self
 
-    def save(self, filename: str) -> object:
+    def save(self, path_save: str, filename: str) -> object:
         """"""
-        filename = os.path.join(PATH_SAVE_PIPELINE, filename)
-        if '.pkl' not in filename:
-            filename += '.pkl'
+        if not os.path.exists(path_save):
+            os.mkdir(path_save)
 
-        with open(filename, 'wb') as f:
+        path = os.path.join(path_save, filename)
+        if '.pkl' not in path:
+            path += '.pkl'
+
+        with open(path, 'wb') as f:
             pickle.dump(self, f)
         return self
 
@@ -160,12 +160,12 @@ class Pipeline:
         )
 
 
-def load_pipeline(filename: str) -> Pipeline:
+def load_pipeline(path_save: str, filename: str) -> Pipeline:
     """"""
-    filename = os.path.join(PATH_SAVE_PIPELINE, filename)
-    if '.pkl' not in filename:
-        filename += '.pkl'
+    path = os.path.join(path_save, filename)
+    if '.pkl' not in path:
+        path += '.pkl'
 
-    with open(filename, 'rb') as f:
+    with open(path, 'rb') as f:
         pipeline = pickle.load(f)
     return pipeline

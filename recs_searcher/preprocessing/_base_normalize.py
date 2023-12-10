@@ -4,8 +4,8 @@
 
 from typing import Literal, Optional, List, Union, Callable
 
-from base import BaseTransformation
-from preprocessing._normalize_text import (
+from ..base import BaseTransformation
+from ._normalize_text import (
     _create_dict_stopwords,
 )
 

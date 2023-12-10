@@ -5,7 +5,7 @@
 
 from typing import Iterable, Union, List, Optional
 
-from base import BaseTransformation, BaseDataset
+from ..base import BaseTransformation, BaseDataset
 from sentence_transformers import InputExample
 
 

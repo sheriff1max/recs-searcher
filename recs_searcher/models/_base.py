@@ -7,8 +7,8 @@ from typing import Iterable, List, Callable, Union, Type, Dict
 import pickle
 import os
 
-from base import BaseModel, BaseTransformation, BaseDataset
-from dataset import SentenceTransformerDataset
+from ..base import BaseModel, BaseTransformation, BaseDataset
+from ..dataset import SentenceTransformerDataset
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 

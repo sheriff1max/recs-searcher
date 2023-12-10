@@ -5,16 +5,16 @@
 
 from typing import Iterable, Union, Callable, List, Dict, Optional
 
-from base import BaseTransformation
+from ..base import BaseTransformation
 
-from augmentation._misspelling import (
+from ._misspelling import (
     _add_syms,
     _change_syms,
     _delete_syms,
     _multiply_syms,
     _swap_syms,
 )
-from augmentation._structure import (
+from ._structure import (
     _delete_words,
     _get_abbreviation,
     _shuffle_words,

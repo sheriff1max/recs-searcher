@@ -1,6 +1,7 @@
 venv/
-recs-searcher/models/weights/
-recs-searcher/api/pipelines/
 .ipynb_checkpoints
 .git
 __pycache__
+dist/
+build
+recs_searcher.egg-info/

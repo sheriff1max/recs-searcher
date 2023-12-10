@@ -82,7 +82,7 @@ def load_exoplanes() -> pd.DataFrame:
         Считанные данные.
     """
 
-    df = _load_csv_data('exoplanes.csv')
+    df = _load_csv_data('exoplanets.csv')
     return df
 
 
@@ -188,7 +188,7 @@ def load_mobile_phones() -> pd.DataFrame:
 
 def load_place_address_russia() -> pd.DataFrame:
     """Загрузка датасета с местами
-    выдачи паспартов.
+    выдачи паспортов.
     Датасет содержит только уникальные значения.
 
 

@@ -14,13 +14,7 @@ import pandas as pd
 import numpy as np
 
 from torch.utils.data import Dataset
-from utils import _metrics, WrapperTransform
-
-
-CUR_PATH = os.path.dirname(__file__)
-PATH_SAVE_MODEL = CUR_PATH + '\\models\\weights'
-if not os.path.exists(PATH_SAVE_MODEL):
-    os.mkdir(PATH_SAVE_MODEL)
+from .utils import _metrics, WrapperTransform
 
 
 class BaseTransformation(ABC):
@@ -183,23 +177,26 @@ class BaseDataset(Dataset):
 class BaseModel(ABC):
     """Абстрактный класс для моделей эмбеддингов."""
 
-    def load(self, filename: str) -> object:
+    def load(self, path_save: str, filename: str) -> object:
         """"""
-        filename = PATH_SAVE_MODEL + '\\' + filename
-        if '.pkl' not in filename:
-            filename += '.pkl'
+        path = os.path.join(path_save, filename)
+        if '.pkl' not in path:
+            path += '.pkl'
 
-        with open(filename, 'rb') as f:
+        with open(path, 'rb') as f:
             self = pickle.load(f)
         return self
 
-    def save(self, filename: str) -> object:
+    def save(self, path_save: str, filename: str) -> object:
         """"""
-        filename = PATH_SAVE_MODEL + '\\' + filename
-        if '.pkl' not in filename:
-            filename += '.pkl'
+        if not os.path.exists(path_save):
+            os.mkdir(path_save)
 
-        with open(filename, 'wb') as f:
+        path = os.path.join(path_save, filename)
+        if '.pkl' not in path:
+            path += '.pkl'
+
+        with open(path, 'wb') as f:
             pickle.dump(self, f)
         return self
 

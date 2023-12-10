@@ -4,7 +4,7 @@
 
 
 from typing import Iterable, Union, List, Dict
-from base import BaseSearch, BaseTransformation, BaseDataset
+from ..base import BaseSearch, BaseTransformation, BaseDataset
 
 from tqdm import tqdm
 

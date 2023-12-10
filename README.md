@@ -1,4 +1,7 @@
 # recs-searcher (Registry error correction system - Searcher)
+
+    pip install recs-searcher==0.0.1
+
 Система способна решить следующие задачи:
 1. Исправление реестровых ошибок пользовательского ввода при сравнении с базой данных;
 2. Поиск схожих текстовых записей на пользовательский текст по базе данных.
@@ -17,4 +20,4 @@
 6. similarity_search.
 
 ## Примеры применения
-Пример для быстрого использования: https://github.com/sheriff1max/recs-searcher/blob/master/recs/notebooks/api.ipynb
+Пример для быстрого использования: https://github.com/sheriff1max/recs-searcher/blob/master/recs-searcher/notebooks/api.ipynb
