@@ -3,9 +3,8 @@
 """
 
 
-from typing import Iterable, Union, List, Dict
+from typing import List, Dict
 from ..base import BaseSearch, BaseTransformation, BaseDataset
-
 from tqdm import tqdm
 
 

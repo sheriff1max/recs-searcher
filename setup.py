@@ -8,7 +8,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.3',
+  version='0.0.4',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
@@ -16,7 +16,11 @@ setup(
   long_description_content_type='text/markdown',
   url='https://github.com/sheriff1max/recs-searcher',
   packages=find_packages(),
+  package_data={
+    'recs_searcher': ['dataset/data/*.csv'],
+  },
   install_requires=[
+    'fastapi==0.104.1',
     'chroma-hnswlib',
     'chromadb',
     'datasets',
@@ -25,7 +29,7 @@ setup(
     'sentence-transformers',
     'pymorphy3',
     'scikit-learn',
-    'scipy',
+    'spacy',
     'thefuzz',
     'torch',
     'torchvision',

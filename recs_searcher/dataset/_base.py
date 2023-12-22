@@ -3,8 +3,7 @@
 """
 
 
-from typing import Iterable, Union, List, Optional
-
+from typing import Iterable, List, Optional
 from ..base import BaseTransformation, BaseDataset
 from sentence_transformers import InputExample
 

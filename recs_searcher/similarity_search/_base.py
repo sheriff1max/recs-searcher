@@ -2,14 +2,11 @@
 Алгоритмы для получения результатов моделей.
 """
 
-from typing import Iterable, Union, Callable, List, Literal
-import datetime
-
+from typing import Iterable, List, Literal
 import numpy as np
 import pandas as pd
 
 from ..utils import _create_date_name
-
 from ..base import BaseSearch, BaseEmbeddingSearch, BaseModel, BaseTransformation
 from thefuzz import process
 import faiss

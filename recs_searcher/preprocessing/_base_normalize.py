@@ -2,7 +2,7 @@
 Алгоритмы для нормализации текста.
 """
 
-from typing import Literal, Optional, List, Union, Callable
+from typing import List
 from ..base import BaseTransformation
 import spacy
 
@@ -16,6 +16,7 @@ class LemmatizeSpacy(BaseTransformation):
         try:
             self._spacy_model = spacy.load(spacy_model_name)
         except OSError:
+            print(f'Downloading {spacy_model_name}...')
             spacy.cli.download(spacy_model_name)
             self._spacy_model = spacy.load(spacy_model_name)
 
@@ -38,6 +39,7 @@ class RemoveStopwordsSpacy(BaseTransformation):
         try:
             self._spacy_model = spacy.load(spacy_model_name)
         except OSError:
+            print(f'Downloading {spacy_model_name}...')
             spacy.cli.download(spacy_model_name)
             self._spacy_model = spacy.load(spacy_model_name)
 

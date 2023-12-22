@@ -3,7 +3,7 @@
 """
 
 
-from typing import Iterable, Union, Callable, List
+from typing import List
 import re
 import string
 from ..base import BaseTransformation
