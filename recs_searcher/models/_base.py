@@ -4,8 +4,6 @@
 
 
 from typing import Iterable, List, Callable, Union, Type, Dict
-import pickle
-import os
 
 from ..base import BaseModel, BaseTransformation, BaseDataset
 from ..dataset import SentenceTransformerDataset
@@ -15,10 +13,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models.fasttext import FastText
 from gensim.models.fasttext_inner import MAX_WORDS_IN_BATCH
 
-from sentence_transformers import SentenceTransformer, models, InputExample, losses
+from sentence_transformers import SentenceTransformer, losses
 from sentence_transformers.evaluation import SentenceEvaluator
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 from torch.optim import AdamW
 from torch import nn

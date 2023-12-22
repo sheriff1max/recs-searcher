@@ -4,80 +4,120 @@
 
 
 from typing import Iterable, Union, Callable, List
-
+import re
+import string
 from ..base import BaseTransformation
 
-from ._clear_text import (
-    _text_lower,
-    _remove_punct,
-    _remove_number,
-    _remove_whitespace,
-    _remove_html_tag,
-    _remove_url,
-    _remove_emoji,
-)
 
+class TextLower(BaseTransformation):
+    """"""
 
-class BaseCleaner(BaseTransformation):
-    """Класс очистики текста для разных языков."""
-
-    def __init__(
-            self,
-            text_lower: Union[bool, Callable[[str], str]] = True,
-            remove_punct: Union[bool, Callable[[str], str]] = True,
-            remove_number: Union[bool, Callable[[str], str]] = True,
-            remove_whitespace: Union[bool, Callable[[str], str]] = True,
-            remove_html_tag: Union[bool, Callable[[str], str]] = True,
-            remove_url: Union[bool, Callable[[str], str]] = True,
-            remove_emoji: Union[bool, Callable[[str], str]] = True,
-    ):
+    def __init__(self):
         super().__init__()
-        self._text_lower = self._sparse_input(text_lower, _text_lower)
-        self._remove_punct = self._sparse_input(remove_punct, _remove_punct)
-        self._remove_number = self._sparse_input(remove_number, _remove_number)
-        self._remove_whitespace = self._sparse_input(remove_whitespace, _remove_whitespace)
-        self._remove_html_tag = self._sparse_input(remove_html_tag, _remove_html_tag)
-        self._remove_url = self._sparse_input(remove_url, _remove_url)
-        self._remove_emoji = self._sparse_input(remove_emoji, _remove_emoji)
 
-    def _base_transform(self, array: List[str]) -> List[str]:
-        """Базовые преобразования, подходящие для любого языка.
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = text.lower()
+            transformed_array.append(text)
+        return transformed_array
 
-        Параметры
-        ----------
-        array : List[str]
-            Список с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
 
-        Returns
-        -------
-        array: List[str]
-            Список с применёнными преобразованиями текста.
-        """
-        array = self._one_transform(array, self._text_lower)
-        array = self._one_transform(array, self._remove_punct)
-        array = self._one_transform(array, self._remove_number)
-        array = self._one_transform(array, self._remove_html_tag)
-        array = self._one_transform(array, self._remove_url)
-        array = self._one_transform(array, self._remove_emoji)
-        array = self._one_transform(array, self._remove_whitespace)
-        return array
+class RemovePunct(BaseTransformation):
+    """"""
 
-    def _custom_transform(self, array: List[str]) -> List[str]:
-        """Новые преобразования. Создан для переопределения в
-        будущих классах.
+    def __init__(self):
+        super().__init__()
+        self._whitespaces = ''.join([' ' for _ in range(len(string.punctuation))])
 
-        Параметры
-        ----------
-        array : List[str]
-            Список с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = text.translate(str.maketrans(string.punctuation, self._whitespaces, ''))
+            transformed_array.append(text)
+        return transformed_array
 
-        Returns
-        -------
-        array: List[str]
-            Список с применёнными преобразованиями текста.
-        """
-        return array
+
+class RemoveNumber(BaseTransformation):
+    """"""
+
+    def __init__(self):
+        super().__init__()
+
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = re.sub(r'\d+', "", text)
+            transformed_array.append(text)
+        return transformed_array
+
+
+class RemoveWhitespace(BaseTransformation):
+    """"""
+
+    def __init__(self):
+        super().__init__()
+
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = text.replace('  ', ' ').strip()
+            transformed_array.append(text)
+        return transformed_array
+
+
+class RemoveHTML(BaseTransformation):
+    """"""
+
+    def __init__(self):
+        super().__init__()
+        self._pattern = re.compile('<.*?>')
+
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = re.sub(self._pattern, '', text) 
+            transformed_array.append(text)
+        return transformed_array
+
+
+class RemoveURL(BaseTransformation):
+    """"""
+
+    def __init__(self):
+        super().__init__()
+        self._pattern = re.compile(r'https?://\S+|www\.\S+')
+
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = re.sub(self._pattern, '', text) 
+            transformed_array.append(text)
+        return transformed_array
+
+
+class RemoveEmoji(BaseTransformation):
+    """"""
+
+    def __init__(self):
+        super().__init__()
+        self._pattern = re.compile("["
+            u"\U0001F600-\U0001F64F"  # смайлики.
+            u"\U0001F300-\U0001F5FF"  # символы и пиктограммы.
+            u"\U0001F680-\U0001F6FF"  # транспорт и символы на карте.
+            u"\U0001F1E0-\U0001F1FF"  # флаги (iOS).
+                                "]+", flags=re.UNICODE)
+
+    def _transform(self, array: List[str]) -> List[str]:
+        """"""
+        transformed_array = []
+        for text in array:
+            text = re.sub(self._pattern, '', text)
+            transformed_array.append(text)
+        return transformed_array

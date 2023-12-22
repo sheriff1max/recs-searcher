@@ -25,7 +25,8 @@ def _load_csv_data(filename: str) -> pd.DataFrame:
     df: pd.DataFrame
         Считанный csv-файл.
     """
-    df = pd.read_csv(CUR_PATH + '\\data\\' + filename)
+    path = os.path.join(CUR_PATH, 'data', filename)
+    df = pd.read_csv(path)
     return df
 
 

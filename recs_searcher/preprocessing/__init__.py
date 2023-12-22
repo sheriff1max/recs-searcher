@@ -1,13 +1,2 @@
-from ._base_clear import (
-    BaseCleaner,
-)
-from ._base_normalize import (
-    BaseNormalizer,
-)
-
-
-__all__ = [
-    'BaseCleaner',
-
-    'BaseNormalizer',
-]
+from ._base_clear import *
+from ._base_normalize import *

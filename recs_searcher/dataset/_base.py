@@ -32,9 +32,6 @@ class SentenceTransformerDataset(BaseDataset):
         if self._augmentation_transform:
             for augmentation_func in self._augmentation_transform:
                 augmenation_text = augmentation_func.transform([augmenation_text])[0]
-
-        if idx < 3:
-            print(InputExample(texts=[original_text, augmenation_text]))
         return InputExample(texts=[original_text, augmenation_text])
 
 

@@ -6,15 +6,13 @@
 from abc import ABC, abstractmethod
 import os
 import pickle
-from typing import Union, Callable, Iterable, List, Optional
-from inspect import getmembers, isfunction
+from typing import Union, Iterable, List, Optional
 import random
 
 import pandas as pd
 import numpy as np
 
 from torch.utils.data import Dataset
-from .utils import _metrics, WrapperTransform
 
 
 class BaseTransformation(ABC):
@@ -23,91 +21,9 @@ class BaseTransformation(ABC):
     def __init__(self, seed: Optional[int] = None):
         self._seed = seed
 
-    def _one_transform(
-            self,
-            array: List[str],
-            transformation: Union[None, Callable[[str], str]],
-    ) -> List[str]:
-        """Применение одного преобразования к списку текста.
-
-        Параметры
-        ----------
-        array : List[str]
-            Список с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
-
-        transformation: function | None
-            Функция для преобразования, либо None если не нужно применять
-            преобразование.
-
-        Returns
-        -------
-        array: List[str]
-            Список с применёнными преобразованиями текста.
-        """
-        if transformation:
-            array = list(map(transformation, array))
-        return array
-
-    def _sparse_input(
-            self,
-            arg: Union[bool, dict, Callable],
-            func: Callable[[str], str],
-    ) -> Optional[Callable]:
-        """Преобразуем полученные от пользователя аргументы
-        в нужный вид.
-
-        Параметры
-        ----------
-        arg : bool | function
-            Пользовательский аргумент:
-                - если True - возвращается функция в переменной func;
-                - если False - возвращает None (не применяет преобразование);
-                - если Callable - возвращается функция в переменной arg.
-
-        func: function | None
-            Функция для преобразования, либо None если не нужно применять
-            преобразование.
-
-        Returns
-        -------
-        return: None | function
-            Функция для преобразования, либо ничего.
-        """
-        if isinstance(arg, bool):
-            if arg:
-                return func
-            else:
-                return None
-
-        elif isinstance(arg, dict):
-            return WrapperTransform(func, **arg).transform
-
-        else:
-            return arg
-
     @abstractmethod
-    def _base_transform(self, array: List[str]) -> List[str]:
+    def _transform(self, array: List[str]) -> List[str]:
         """Базовые преобразования, подходящие для любого языка.
-
-        Параметры
-        ----------
-        array : List[str]
-            Список с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
-
-        Returns
-        -------
-        array: List[str]
-            Список с применёнными преобразованиями текста.
-        """
-
-    @abstractmethod
-    def _custom_transform(self, array: List[str]) -> List[str]:
-        """Новые преобразования. Создан для переопределения в
-        будущих классах.
 
         Параметры
         ----------
@@ -140,9 +56,7 @@ class BaseTransformation(ABC):
         array = list(array)
 
         random.seed(self._seed)
-        array = self._base_transform(array)
-        random.seed(self._seed)
-        array = self._custom_transform(array)
+        array = self._transform(array)
         return array
 
 
@@ -177,9 +91,9 @@ class BaseDataset(Dataset):
 class BaseModel(ABC):
     """Абстрактный класс для моделей эмбеддингов."""
 
-    def load(self, path_save: str, filename: str) -> object:
+    def load(self, path_folder_save: str, filename: str) -> object:
         """"""
-        path = os.path.join(path_save, filename)
+        path = os.path.join(path_folder_save, filename)
         if '.pkl' not in path:
             path += '.pkl'
 
@@ -187,12 +101,12 @@ class BaseModel(ABC):
             self = pickle.load(f)
         return self
 
-    def save(self, path_save: str, filename: str) -> object:
+    def save(self, path_folder_save: str, filename: str) -> object:
         """"""
-        if not os.path.exists(path_save):
-            os.mkdir(path_save)
+        if not os.path.exists(path_folder_save):
+            os.mkdir(path_folder_save)
 
-        path = os.path.join(path_save, filename)
+        path = os.path.join(path_folder_save, filename)
         if '.pkl' not in path:
             path += '.pkl'
 

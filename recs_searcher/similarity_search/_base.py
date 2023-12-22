@@ -26,7 +26,6 @@ class TheFuzzSearch(BaseSearch):
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
     ):
-        self._original_array = original_array
         super().__init__(
             original_array=original_array,
             preprocessing=preprocessing,

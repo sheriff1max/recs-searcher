@@ -1,14 +1,12 @@
 """ api.py
 Взаимодействие с системой."""
 
-from typing import List, Iterable, Dict, Type, Union, Optional
+from typing import List, Iterable, Dict, Type
 
 from ..base import(
-    BaseDataset,
     BaseTransformation,
     BaseModel,
     BaseSearch,
-    BaseEmbeddingSearch,
 )
 from ..models import Validate
 
@@ -106,18 +104,17 @@ class Pipeline:
                 preprocessing=preprocessing,
             )
 
-    def load(self, path_save: str, filename: str) -> object:
+    def load(self, path_to_filename: str) -> object:
         """"""
-        path = os.path.join(path_save, filename)
-        self = load_pipeline(path)
+        self = load_pipeline(path_to_filename)
         return self
 
-    def save(self, path_save: str, filename: str) -> object:
+    def save(self, path_folder_save: str, filename: str) -> object:
         """"""
-        if not os.path.exists(path_save):
-            os.mkdir(path_save)
+        if not os.path.exists(path_folder_save):
+            os.mkdir(path_folder_save)
 
-        path = os.path.join(path_save, filename)
+        path = os.path.join(path_folder_save, filename)
         if '.pkl' not in path:
             path += '.pkl'
 
@@ -160,12 +157,11 @@ class Pipeline:
         )
 
 
-def load_pipeline(path_save: str, filename: str) -> Pipeline:
+def load_pipeline(path_to_filename: str) -> Pipeline:
     """"""
-    path = os.path.join(path_save, filename)
-    if '.pkl' not in path:
-        path += '.pkl'
+    if '.pkl' not in path_to_filename:
+        path_to_filename += '.pkl'
 
-    with open(path, 'rb') as f:
+    with open(path_to_filename, 'rb') as f:
         pipeline = pickle.load(f)
     return pipeline

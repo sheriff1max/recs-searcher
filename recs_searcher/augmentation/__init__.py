@@ -1,9 +1,2 @@
-from ._base import (
-    MisspellingAugmentation,
-    StructureAugmentation,
-)
-
-__all__ = [
-    'MisspellingAugmentation',
-    'StructureAugmentation',
-]
+from ._base_misspelling import *
+from ._base_structure import *
