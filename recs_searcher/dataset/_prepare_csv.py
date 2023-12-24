@@ -4,11 +4,11 @@
 
 
 import pandas as pd
-import os
+from pathlib import Path
 import csv
 
 
-CUR_PATH = os.path.dirname(__file__)
+CUR_PATH = Path(__file__).parents[0]
 
 
 def prepare_csv(
@@ -50,7 +50,8 @@ def prepare_csv(
     if '.csv' in filename:
         filename = filename[:-4]
 
-    df = pd.read_csv(f'{CUR_PATH}\\data\\{filename}.csv', sep=sep)
+    path_old_file = CUR_PATH / 'data' / f'{filename}.csv'
+    df = pd.read_csv(path_old_file, sep=sep)
 
     # Целевой столбцев переименуем в `target`.
     df = df.rename(columns={
@@ -61,13 +62,14 @@ def prepare_csv(
     df = pd.DataFrame({'target': df.target.unique()})
 
     # Удаление цитирующих ковычек.
+    path_new_file = CUR_PATH / 'data' / f'{filename}_new.csv'
     if remove_quoting:
-        df.to_csv(f'{CUR_PATH}\\{filename}_new.csv', index=False,
+        df.to_csv(path_new_file, index=False,
                 quoting=csv.QUOTE_NONE, quotechar='', escapechar='\\')
     else:
-        df.to_csv(f'{CUR_PATH}\\data\\{filename}_new.csv', index=False)
+        df.to_csv(path_new_file, index=False)
 
-    print(f'В `{CUR_PATH}` создан новый файл: `{filename}_new.csv`')
+    print(f'{path_new_file} создан.')
 
 
 if __name__ == '__main__':

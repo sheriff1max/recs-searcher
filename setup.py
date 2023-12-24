@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import os
 
 
 def readme():
@@ -8,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.4',
+  version='0.0.5',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',

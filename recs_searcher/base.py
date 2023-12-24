@@ -4,7 +4,7 @@
 
 
 from abc import ABC, abstractmethod
-import os
+from pathlib import Path
 import pickle
 from typing import Union, Iterable, List, Optional
 import random
@@ -93,9 +93,9 @@ class BaseModel(ABC):
 
     def load(self, path_folder_save: str, filename: str) -> object:
         """"""
-        path = os.path.join(path_folder_save, filename)
-        if '.pkl' not in path:
-            path += '.pkl'
+        if '.pkl' not in filename:
+            filename += '.pkl'
+        path = Path(path_folder_save) / filename
 
         with open(path, 'rb') as f:
             self = pickle.load(f)
@@ -103,12 +103,13 @@ class BaseModel(ABC):
 
     def save(self, path_folder_save: str, filename: str) -> object:
         """"""
-        if not os.path.exists(path_folder_save):
-            os.mkdir(path_folder_save)
+        path_folder_save = Path(path_folder_save)
+        if not path_folder_save.exists():
+            path_folder_save.mkdir()
 
-        path = os.path.join(path_folder_save, filename)
-        if '.pkl' not in path:
-            path += '.pkl'
+        if '.pkl' not in filename:
+            filename += '.pkl'
+        path = path_folder_save / filename
 
         with open(path, 'wb') as f:
             pickle.dump(self, f)

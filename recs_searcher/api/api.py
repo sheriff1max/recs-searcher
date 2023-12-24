@@ -12,7 +12,7 @@ from ..models import Validate
 
 import numpy as np
 import pandas as pd
-import os
+from pathlib import Path
 import pickle
 
 
@@ -111,12 +111,13 @@ class Pipeline:
 
     def save(self, path_folder_save: str, filename: str) -> object:
         """"""
-        if not os.path.exists(path_folder_save):
-            os.mkdir(path_folder_save)
+        path_folder_save = Path(path_folder_save)
+        if not path_folder_save.exists():
+            path_folder_save.mkdir()
 
-        path = os.path.join(path_folder_save, filename)
-        if '.pkl' not in path:
-            path += '.pkl'
+        if '.pkl' not in filename:
+            filename += '.pkl'
+        path = path_folder_save / filename
 
         with open(path, 'wb') as f:
             pickle.dump(self, f)
@@ -162,6 +163,7 @@ def load_pipeline(path_to_filename: str) -> Pipeline:
     if '.pkl' not in path_to_filename:
         path_to_filename += '.pkl'
 
+    path_to_filename = Path(path_to_filename)
     with open(path_to_filename, 'rb') as f:
         pipeline = pickle.load(f)
     return pipeline

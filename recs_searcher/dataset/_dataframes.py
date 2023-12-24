@@ -4,10 +4,10 @@
 
 
 import pandas as pd
-import os
+from pathlib import Path
 
 
-CUR_PATH = os.path.dirname(__file__)
+CUR_PATH = Path(__file__).parents[0]
 
 
 def _load_csv_data(filename: str) -> pd.DataFrame:
@@ -25,7 +25,7 @@ def _load_csv_data(filename: str) -> pd.DataFrame:
     df: pd.DataFrame
         Считанный csv-файл.
     """
-    path = os.path.join(CUR_PATH, 'data', filename)
+    path = CUR_PATH / Path('data') / Path(filename)
     df = pd.read_csv(path)
     return df
 
