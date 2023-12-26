@@ -5,3 +5,4 @@ __pycache__
 dist/
 build
 recs_searcher.egg-info/
+weights/

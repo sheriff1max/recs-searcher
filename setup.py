@@ -7,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.5',
+  version='0.0.7',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
@@ -20,7 +20,6 @@ setup(
   },
   install_requires=[
     'fastapi==0.104.1',
-    'chroma-hnswlib',
     'chromadb',
     'datasets',
     'faiss-cpu',
