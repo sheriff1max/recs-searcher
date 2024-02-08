@@ -8,32 +8,8 @@ import random
 from ..base import BaseTransformation
 
 
-class Abbreviation(BaseTransformation):
-    """"""
-
-    def __init__(
-            self,
-            sep: str = ' ',
-            seed: Optional[int] = None,
-    ):
-        super().__init__(seed=seed)
-        self._sep = sep
-
-    def _transform(self, array: List[str]) -> List[str]:
-        """Берутся первые символы слов и превратить
-        в одно слово. Нужно для сокращений НАИМЕНОВАНИЙ.
-        Например, `Harry Potter` -> `HP`. """
-        transformed_array = []
-        for text in array:
-            text = text.split(self._sep)
-            changed_text = [word[0] for word in text if word]
-            changed_text = ''.join(changed_text).upper()
-            transformed_array.append(changed_text)
-        return transformed_array
-
-
 class DeleteWords(BaseTransformation):
-    """"""
+    """Удаление случайных слов из текста."""
 
     def __init__(
             self,
@@ -66,7 +42,7 @@ class DeleteWords(BaseTransformation):
 
 
 class ShuffleWords(BaseTransformation):
-    """"""
+    """Перемешивание слов в тексте случайным образом."""
 
     def __init__(
             self,

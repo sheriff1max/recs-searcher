@@ -6,6 +6,11 @@
 import pandas as pd
 from pathlib import Path
 
+import pathlib
+import platform
+if platform.system() == 'Linux':
+    pathlib.WindowsPath = pathlib.PosixPath
+
 
 CUR_PATH = Path(__file__).parents[0]
 

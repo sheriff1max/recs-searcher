@@ -8,7 +8,7 @@ import spacy
 
 
 class LemmatizeSpacy(BaseTransformation):
-    """"""
+    """Лемматизация слов с помощью Spacy-моделей."""
 
     def __init__(self, spacy_model_name: str):
         super().__init__()
@@ -31,7 +31,7 @@ class LemmatizeSpacy(BaseTransformation):
 
 
 class RemoveStopwordsSpacy(BaseTransformation):
-    """"""
+    """Удаление стоп-слов с помощью Spacy-моделей."""
 
     def __init__(self, spacy_model_name: str):
         super().__init__()

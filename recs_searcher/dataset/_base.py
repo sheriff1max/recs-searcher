@@ -32,20 +32,3 @@ class SentenceTransformerDataset(BaseDataset):
             for augmentation_func in self._augmentation_transform:
                 augmenation_text = augmentation_func.transform([augmenation_text])[0]
         return InputExample(texts=[original_text, augmenation_text])
-
-
-class StandartDataset(BaseDataset):
-    """"""
-
-    def __init__(
-            self,
-            array: Iterable[str],            
-    ):
-        super().__init__(array=array)
-
-    def __len__(self):
-        return len(self._array)
-
-    def __getitem__(self, idx):
-        text = self._array[idx]
-        return text

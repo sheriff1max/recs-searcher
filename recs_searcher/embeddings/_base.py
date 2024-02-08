@@ -5,13 +5,10 @@
 
 from typing import Iterable, List, Callable, Union, Type, Dict
 
-from ..base import BaseModel, BaseTransformation, BaseDataset
+from ..base import BaseModel, BaseTransformation
 from ..dataset import SentenceTransformerDataset
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-from gensim.models.fasttext import FastText
-from gensim.models.fasttext_inner import MAX_WORDS_IN_BATCH
+from sklearn.feature_extraction.text import CountVectorizer
 
 from sentence_transformers import SentenceTransformer, losses
 from sentence_transformers.evaluation import SentenceEvaluator
@@ -21,12 +18,10 @@ from torch.optim import Optimizer
 from torch.optim import AdamW
 from torch import nn
 
-from nltk.tokenize import word_tokenize
-
 import numpy as np
 
 
-class TfidfWrapperModel(BaseModel):
+class CountVectorizerWrapperModel(BaseModel):
     """"""
 
     def __init__(
@@ -54,7 +49,7 @@ class TfidfWrapperModel(BaseModel):
             smooth_idf=True,
             sublinear_tf=False,
     ):
-        self._model = TfidfVectorizer(
+        self._model = CountVectorizer(
             input=input,
             encoding=encoding,
             decode_error=decode_error,
@@ -78,127 +73,13 @@ class TfidfWrapperModel(BaseModel):
             sublinear_tf=sublinear_tf,
         )
 
-    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
+    def fit(self, array: Iterable[str]) -> object:
         self._model.fit(array)
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
         array = self._model.transform(array).toarray()
         return array
-
-
-class FastTextWrapperModel(BaseModel):
-    """"""
-
-    def __init__(
-            self,
-            sg=1,
-            hs=1,
-            vector_size=200,
-            alpha=0.025,
-            window=2,
-            min_count=1,
-            max_vocab_size=None,
-            word_ngrams=1,
-            sample=1e-3,
-            seed=1,
-            workers=3,
-            min_alpha=0.0001,
-            negative=5,
-            ns_exponent=0.75,
-            cbow_mean=1,
-            hashfxn=hash,
-            epochs=70,
-            null_word=0,
-            min_n=0,
-            max_n=6,
-            sorted_vocab=1,
-            bucket=2000000,
-            trim_rule=None,
-            batch_words=MAX_WORDS_IN_BATCH,
-            callbacks=(),
-            max_final_vocab=None,
-            shrink_windows=True,
-
-            tokenizer: Callable=word_tokenize,
-    ):
-        self._model = None
-
-        self._sg=sg
-        self._hs=hs
-        self._vector_size=vector_size
-        self._alpha=alpha
-        self._window=window
-        self._min_count=min_count
-        self._max_vocab_size=max_vocab_size
-        self._word_ngrams=word_ngrams
-        self._sample=sample
-        self._seed=seed
-        self._workers=workers
-        self._min_alpha=min_alpha
-        self._negative=negative
-        self._ns_exponent=ns_exponent
-        self._cbow_mean=cbow_mean
-        self._hashfxn=hashfxn
-        self._epochs=epochs
-        self._null_word=null_word
-        self._min_n=min_n
-        self._max_n=max_n
-        self._sorted_vocab=sorted_vocab
-        self._bucket=bucket
-        self._trim_rule=trim_rule
-        self._batch_words=batch_words
-        self._callbacks=callbacks
-        self._max_final_vocab=max_final_vocab
-        self._shrink_windows=shrink_windows
-
-        self._tokenizer = tokenizer
-
-    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
-        array_tokenized = [self._tokenizer(i) for i in array]
-
-        self._model = FastText(
-            array_tokenized,
-
-            sg=self._sg,
-            hs=self._hs,
-            vector_size=self._vector_size,
-            alpha=self._alpha,
-            window=self._window,
-            min_count=self._min_count,
-            max_vocab_size=self._max_vocab_size,
-            word_ngrams=self._word_ngrams,
-            sample=self._sample,
-            seed=self._seed,
-            workers=self._workers,
-            min_alpha=self._min_alpha,
-            negative=self._negative,
-            ns_exponent=self._ns_exponent,
-            cbow_mean=self._cbow_mean,
-            hashfxn=self._hashfxn,
-            epochs=self._epochs,
-            null_word=self._null_word,
-            min_n=self._min_n,
-            max_n=self._max_n,
-            sorted_vocab=self._sorted_vocab,
-            bucket=self._bucket,
-            trim_rule=self._trim_rule,
-            batch_words=self._batch_words,
-            callbacks=self._callbacks,
-            max_final_vocab=self._max_final_vocab,
-            shrink_windows=self._shrink_windows,            
-        )
-        return self
-
-    def transform(self, array: Iterable[str]) -> np.ndarray:
-        array_tokenized = [self._tokenizer(i) for i in array]
-
-        array_list = []
-
-        for text_tokens in array_tokenized:
-            vector = self._model.wv.get_sentence_vector(text_tokens)
-            array_list.append(vector)
-        return np.array(array_list)
 
 
 class SentenceTransformerWrapperModel(BaseModel):
@@ -221,7 +102,7 @@ class SentenceTransformerWrapperModel(BaseModel):
             batch_size=32,
 
             evaluator: SentenceEvaluator = None,
-            epochs: int = 5,
+            epochs: int = 4,
             steps_per_epoch = None,
             scheduler: str = 'WarmupLinear',
             warmup_steps: int = 10000,
@@ -264,11 +145,10 @@ class SentenceTransformerWrapperModel(BaseModel):
         self._checkpoint_save_steps = checkpoint_save_steps
         self._checkpoint_save_total_limit = checkpoint_save_total_limit
 
-    def fit(self, array: Union[SentenceTransformerDataset, Iterable[str]]) -> object:
+    def fit(self, array: Iterable[str]) -> object:
         """"""
 
-        if not isinstance(array, SentenceTransformerDataset):
-            train_dataset = SentenceTransformerDataset(array, self._augmentation_transform)
+        train_dataset = SentenceTransformerDataset(array, self._augmentation_transform)
 
         train_dataloader = DataLoader(
             train_dataset,

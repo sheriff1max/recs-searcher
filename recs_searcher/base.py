@@ -6,13 +6,18 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Union, Iterable, List, Optional
+from typing import Iterable, List, Optional
 import random
 
 import pandas as pd
 import numpy as np
 
 from torch.utils.data import Dataset
+
+import pathlib
+import platform
+if platform.system() == 'Linux':
+    pathlib.WindowsPath = pathlib.PosixPath
 
 
 class BaseTransformation(ABC):
@@ -78,15 +83,6 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx):
         """Получение элемента по индексу"""
 
-    def append(self, text: str) -> Optional[bool]:
-        """"""
-        if isinstance(self._array, list):
-            self._array.append(text)
-        elif isinstance(self._array, np.ndarray):
-            np.append(self._array, text)
-        else:
-            return False
-
 
 class BaseModel(ABC):
     """Абстрактный класс для моделей эмбеддингов."""
@@ -116,7 +112,7 @@ class BaseModel(ABC):
         return self
 
     @abstractmethod
-    def fit(self, array: Union[BaseDataset, Iterable[str]]) -> object:
+    def fit(self, array: Iterable[str]) -> object:
         """"""
 
     @abstractmethod

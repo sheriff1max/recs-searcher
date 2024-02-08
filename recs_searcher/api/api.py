@@ -8,12 +8,17 @@ from ..base import(
     BaseModel,
     BaseSearch,
 )
-from ..models import Validate
+from ..embeddings import Validate
 
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import pickle
+
+import pathlib
+import platform
+if platform.system() == 'Linux':
+    pathlib.WindowsPath = pathlib.PosixPath
 
 
 class Pipeline:

@@ -4,12 +4,12 @@
 
 
 from typing import List, Dict
-from ..base import BaseSearch, BaseTransformation, BaseDataset
+from ..base import BaseSearch, BaseTransformation
 from tqdm import tqdm
 
 
 class Validate:
-    """Класс валидации моделей."""
+    """Класс валидации пайплайна."""
 
     def __new__(
             cls,
