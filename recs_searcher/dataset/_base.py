@@ -4,12 +4,13 @@
 
 
 from typing import Iterable, List, Optional
-from ..base import BaseTransformation, BaseDataset
+from ..base import BaseTransformation
 from sentence_transformers import InputExample
+from torch.utils.data import Dataset
 
 
-class SentenceTransformerDataset(BaseDataset):
-    """"""
+class SentenceTransformerDataset(Dataset):
+    """Обёртка дадасета для эмбеддингов из Sentence-Transformers."""
 
     def __init__(
             self,
@@ -23,7 +24,6 @@ class SentenceTransformerDataset(BaseDataset):
         return len(self._array)
 
     def __getitem__(self, idx):
-
         text = self._array[idx]
 
         original_text = text

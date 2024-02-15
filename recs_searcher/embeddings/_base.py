@@ -5,7 +5,7 @@
 
 from typing import Iterable, List, Callable, Union, Type, Dict
 
-from ..base import BaseModel, BaseTransformation
+from ..base import BaseEmbedding, BaseTransformation
 from ..dataset import SentenceTransformerDataset
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -21,12 +21,14 @@ from torch import nn
 import numpy as np
 
 
-class CountVectorizerWrapperModel(BaseModel):
-    """"""
+class CountVectorizerWrapperEmbedding(BaseEmbedding):
+    """Мешок слов/символов N-грам."""
 
     def __init__(
             self,
-            *,
+            analyzer="word",  # 'word' | 'char' | 'char_wb'
+            ngram_range=(1, 1),
+
             input="content",
             encoding="utf-8",
             decode_error="strict",
@@ -34,10 +36,8 @@ class CountVectorizerWrapperModel(BaseModel):
             lowercase=False,
             preprocessor=None,
             tokenizer=None,
-            analyzer="word",
             stop_words=None,
             token_pattern=r"(?u)\b\w\w+\b",
-            ngram_range=(1, 1),
             max_df=1.0,
             min_df=1,
             max_features=None,
@@ -82,8 +82,9 @@ class CountVectorizerWrapperModel(BaseModel):
         return array
 
 
-class SentenceTransformerWrapperModel(BaseModel):
+class SentenceTransformerWrapperEmbedding(BaseEmbedding):
     """
+    Эмбеддинги на основе трансформеров из Sentence-transformers.
 
     Примечание
     ----------
@@ -146,8 +147,6 @@ class SentenceTransformerWrapperModel(BaseModel):
         self._checkpoint_save_total_limit = checkpoint_save_total_limit
 
     def fit(self, array: Iterable[str]) -> object:
-        """"""
-
         train_dataset = SentenceTransformerDataset(array, self._augmentation_transform)
 
         train_dataloader = DataLoader(
@@ -181,6 +180,5 @@ class SentenceTransformerWrapperModel(BaseModel):
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
-
         array = self._model.encode(array)
         return np.array(array)

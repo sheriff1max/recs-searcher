@@ -1,11 +1,11 @@
 """ api.py
 Взаимодействие с системой."""
 
-from typing import List, Iterable, Dict, Type
+from typing import List, Iterable, Dict, Type, Optional
 
 from ..base import(
     BaseTransformation,
-    BaseModel,
+    BaseEmbedding,
     BaseSearch,
 )
 from ..embeddings import Validate
@@ -29,7 +29,7 @@ class Pipeline:
             dataset: Iterable[str],
             preprocessing: List[BaseTransformation],
             searcher: Type[BaseSearch],
-            model: BaseModel = None,
+            model: Optional[BaseEmbedding] = None,
             verbose: bool = True,
             **searcher_args,
     ):
@@ -40,7 +40,7 @@ class Pipeline:
 
         self._model = model
         self._embedding_database = None
-        if isinstance(self._model, BaseModel):
+        if isinstance(self._model, BaseEmbedding):
             self.__verbose('The training of the model has begun...', verbose)
             self._embedding_database = self.__fit_transform(self._model, self._clear_dataset)
 
@@ -78,7 +78,7 @@ class Pipeline:
 
     def __fit_transform(
             self,
-            model: BaseModel,
+            model: BaseEmbedding,
             dataset: Iterable[str],
     ) -> np.ndarray:
         """"""
@@ -88,14 +88,14 @@ class Pipeline:
     def __create_searcher(
             self,
             searcher: Type[BaseSearch],
-            model: BaseModel,
+            model: BaseEmbedding,
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
             searcher_args: dict,
     ) -> BaseSearch:
         """"""
-        if isinstance(self._model, BaseModel):
+        if isinstance(self._model, BaseEmbedding):
             return searcher(
                 model=model,
                 embedding_database=embedding_database,

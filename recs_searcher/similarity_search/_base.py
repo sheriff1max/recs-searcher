@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from ..utils import _create_date_name
-from ..base import BaseSearch, BaseEmbeddingSearch, BaseModel, BaseTransformation
+from ..base import BaseSearch, BaseEmbeddingSearch, BaseEmbedding, BaseTransformation
 from thefuzz import process
 import faiss
 import chromadb
@@ -15,8 +15,8 @@ from sklearn.neighbors import NearestNeighbors
 
 
 class TheFuzzSearch(BaseSearch):
-    """Класс поиска ближайших N-векторов в базе данных
-    с помощью алгоритмов библиотеки TheFuzz."""
+    """Класс поиска наиболее похожих слов в БД
+    с помощью расстояния Ливенштейна."""
 
     def __init__(
             self,
@@ -38,13 +38,13 @@ class TheFuzzSearch(BaseSearch):
 
         results = process.extract(text, self._original_array, limit=k)
 
-        lst_name = []
+        lst_text = []
         lst_similarity = []
         for result in results:
-            lst_name.append(result[0])
+            lst_text.append(result[0])
             lst_similarity.append(result[1])
 
-        df = pd.DataFrame({'name': lst_name, 'similarity': lst_similarity})
+        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
         df = df.sort_values(by=['similarity'], ascending=False)
         df = df.head(k)
         return df
@@ -57,7 +57,7 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
 
     def __init__(
             self,
-            model: BaseModel,
+            model: BaseEmbedding,
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
@@ -109,13 +109,13 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
         text = [text]
         array = self._model.transform(text)
 
-        lst_similarity, lst_name = self._knn.kneighbors(array)
+        lst_similarity, lst_text = self._knn.kneighbors(array)
         lst_similarity = lst_similarity[0]
-        lst_name = self._original_array[lst_name[0]]
+        lst_text = self._original_array[lst_text[0]]
         if self._metric == 'cosine':
             lst_similarity = list(map(lambda x: 1 - x, lst_similarity))
 
-        df = pd.DataFrame({'name': lst_name, 'similarity': lst_similarity})
+        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
         df = df.sort_values(by=['similarity'], ascending=False)
         return df
 
@@ -125,7 +125,7 @@ class FaissSearch(BaseEmbeddingSearch):
 
     def __init__(
             self,
-            model: BaseModel,
+            model: BaseEmbedding,
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
@@ -159,13 +159,13 @@ class FaissSearch(BaseEmbeddingSearch):
         distances, indices = self._embedding_database.search(array, k)
         distances, indices = distances[0], indices[0]
 
-        lst_name = []
+        lst_text = []
         lst_similarity = []
         for i in range(indices.shape[0]):
-            lst_name.append(self._original_array[indices[i]])
+            lst_text.append(self._original_array[indices[i]])
             lst_similarity.append(distances[i])
 
-        df = pd.DataFrame({'name': lst_name, 'similarity': lst_similarity})
+        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
         df = df.sort_values(by=['similarity'])
         return df
 
@@ -177,7 +177,7 @@ class ChromaDBSearch(BaseEmbeddingSearch):
 
     def __init__(
             self,
-            model: BaseModel,
+            model: BaseEmbedding,
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
@@ -225,9 +225,9 @@ class ChromaDBSearch(BaseEmbeddingSearch):
             query_embeddings=array.tolist(),
             n_results=k,
         )
-        lst_name, lst_similarity = result['ids'][0], result['distances'][0]
+        lst_text, lst_similarity = result['ids'][0], result['distances'][0]
         if self._metric == 'cosine':
             lst_similarity = list(map(lambda x: 1 - x, lst_similarity))
 
-        df = pd.DataFrame({'name': lst_name, 'similarity': lst_similarity})
+        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
         return df

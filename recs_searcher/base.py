@@ -12,8 +12,6 @@ import random
 import pandas as pd
 import numpy as np
 
-from torch.utils.data import Dataset
-
 import pathlib
 import platform
 if platform.system() == 'Linux':
@@ -28,7 +26,7 @@ class BaseTransformation(ABC):
 
     @abstractmethod
     def _transform(self, array: List[str]) -> List[str]:
-        """Базовые преобразования, подходящие для любого языка.
+        """Преобразование, применяемое к каждому текстовому элементу списка array.
 
         Параметры
         ----------
@@ -44,14 +42,12 @@ class BaseTransformation(ABC):
         """
 
     def transform(self, array: Iterable[str]) -> List[str]:
-        """Применение всех преобразований к массиву.
+        """Применение преобразования к массиву.
 
         Параметры
         ----------
         array : Iterable[str]
             Массив с текстом, который нужно преобразовать.
-            Например,
-            ['Hello! My nam3 is Harry :)', 'Понятно, а я Рон.'].
 
         Returns
         -------
@@ -65,40 +61,46 @@ class BaseTransformation(ABC):
         return array
 
 
-class BaseDataset(Dataset):
-    """Абстрактный класс для обёртки датасетов.
-    Нужен для обучения нейронных сетей.
-    """
+class BaseEmbedding(ABC):
+    """Абстрактный класс для эмбеддингов."""
 
-    def __init__(
-            self,
-            array: Iterable[str],
-    ):
-        self._array = array
+    def load(self, path_folder_load: str, filename: str) -> None:
+        """Загрузка vectorizer из файла.
 
-    def __len__(self):
-        return len(self._array)
+        Параметры
+        ----------
+        path_folder_load : str
+            Путь, где лежит файл.
 
-    @abstractmethod
-    def __getitem__(self, idx):
-        """Получение элемента по индексу"""
+        filename : str
+            Название файла для загрузки.
 
-
-class BaseModel(ABC):
-    """Абстрактный класс для моделей эмбеддингов."""
-
-    def load(self, path_folder_save: str, filename: str) -> object:
-        """"""
+        Returns
+        -------
+        None
+        """
         if '.pkl' not in filename:
             filename += '.pkl'
-        path = Path(path_folder_save) / filename
+        path = Path(path_folder_load) / filename
 
         with open(path, 'rb') as f:
             self = pickle.load(f)
-        return self
 
-    def save(self, path_folder_save: str, filename: str) -> object:
-        """"""
+    def save(self, path_folder_save: str, filename: str) -> None:
+        """Сохранение vectorizer в файл.
+
+        Параметры
+        ----------
+        path_folder_save : str
+            Путь сохранения файла.
+
+        filename : str
+            Название файла для сохранения.
+
+        Returns
+        -------
+        None
+        """
         path_folder_save = Path(path_folder_save)
         if not path_folder_save.exists():
             path_folder_save.mkdir()
@@ -109,17 +111,51 @@ class BaseModel(ABC):
 
         with open(path, 'wb') as f:
             pickle.dump(self, f)
-        return self
 
     @abstractmethod
     def fit(self, array: Iterable[str]) -> object:
-        """"""
+        """Обучение vectorizer.
+
+        Параметры
+        ----------
+        array : Iterable[str]
+            Массив с текстом, на котором обучается vectorizer.
+
+        Returns
+        -------
+        self
+        """
 
     @abstractmethod
     def transform(self, array: Iterable[str]) -> np.ndarray:
-        """"""
+        """Обучение vectorizer.
+
+        Параметры
+        ----------
+        array : Iterable[str]
+            Массив с текстом, который нужно трансформировать в вектор чисел.
+
+        Returns
+        -------
+        array: np.ndarray
+            Массив с закодированными словами в числа.
+        """
 
     def fit_transform(self, array: Iterable[str]) -> np.ndarray:
+        """Обучение vectorizer и трансформация текста.
+        Выполняет методы fit() и transform() текущего класса.
+
+        Параметры
+        ----------
+        array : Iterable[str]
+            Массив с текстом, на котором обучаемся и 
+            который нужно трансформировать в вектор чисел.
+
+        Returns
+        -------
+        array: np.ndarray
+            Массив с закодированными словами в числа.
+        """
         self.fit(array)
         return self.transform(array)
 
@@ -138,7 +174,23 @@ class BaseSearch(ABC):
 
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
+        """Поиск наиболее схожих k-текстов из БД на text пользователя.
+
+        Параметры
+        ----------
+        text : str
+            Пользовательский текст, которому нужно найти наиболее
+            схожий текст из БД.
+
+        k : int
+            Кол-во выдаваемых результатов.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Датафрейм с результатами.
+            df.columns = ['text', 'similarity']
+        """
 
 
 class BaseEmbeddingSearch(BaseSearch):
@@ -148,7 +200,7 @@ class BaseEmbeddingSearch(BaseSearch):
 
     def __init__(
             self,
-            model: BaseModel,
+            model: BaseEmbedding,
             embedding_database,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
@@ -164,4 +216,4 @@ class BaseEmbeddingSearch(BaseSearch):
 
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
+        """Та же логика, что и в классе `BaseSearch`."""
