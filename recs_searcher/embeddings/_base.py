@@ -3,10 +3,11 @@
 """
 
 
-from typing import Iterable, List, Callable, Union, Type, Dict
+from typing import Iterable, List, Callable, Union, Type, Dict, Optional
 
 from ..base import BaseEmbedding, BaseTransformation
 from ..dataset import SentenceTransformerDataset
+from ..utils import concat_embeddings
 
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -29,6 +30,8 @@ class CountVectorizerWrapperEmbedding(BaseEmbedding):
             analyzer="word",  # 'word' | 'char' | 'char_wb'
             ngram_range=(1, 1),
 
+            max_df=1.0,
+            min_df=1,
             input="content",
             encoding="utf-8",
             decode_error="strict",
@@ -38,16 +41,10 @@ class CountVectorizerWrapperEmbedding(BaseEmbedding):
             tokenizer=None,
             stop_words=None,
             token_pattern=r"(?u)\b\w\w+\b",
-            max_df=1.0,
-            min_df=1,
             max_features=None,
             vocabulary=None,
             binary=False,
             dtype=np.float64,
-            norm="l2",
-            use_idf=True,
-            smooth_idf=True,
-            sublinear_tf=False,
     ):
         self._model = CountVectorizer(
             input=input,
@@ -67,10 +64,6 @@ class CountVectorizerWrapperEmbedding(BaseEmbedding):
             vocabulary=vocabulary,
             binary=binary,
             dtype=dtype,
-            norm=norm,
-            use_idf=use_idf,
-            smooth_idf=smooth_idf,
-            sublinear_tf=sublinear_tf,
         )
 
     def fit(self, array: Iterable[str]) -> object:
@@ -182,3 +175,29 @@ class SentenceTransformerWrapperEmbedding(BaseEmbedding):
     def transform(self, array: Iterable[str]) -> np.ndarray:
         array = self._model.encode(array)
         return np.array(array)
+
+
+class EnsembleWrapperEmbedding(BaseEmbedding):
+    """Ансамбль из vectorizer, объединяющий их результаты."""
+
+    def __init__(
+            self,
+            models: List[BaseEmbedding],
+            weights: Optional[List[float]] = None,
+    ):
+        self._models = models
+        self._weights = weights
+
+    def fit(self, array: Iterable[str]) -> object:
+        for model in self._models:
+            model.fit(array)
+        return self
+
+    def transform(self, array: Iterable[str]) -> np.ndarray:
+        embeddings = []
+        for model in self._models:
+            embedding = model.transform(array)
+            embeddings.append(embedding)
+        
+        array = concat_embeddings(embeddings, self._weights)
+        return array

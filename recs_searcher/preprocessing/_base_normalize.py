@@ -20,7 +20,7 @@ class LemmatizeSpacy(BaseTransformation):
             spacy.cli.download(spacy_model_name)
             self._spacy_model = spacy.load(spacy_model_name)
 
-    def _transform(self, array: List[str]) -> List[str]:
+    def __transform(self, array: List[str]) -> List[str]:
         """"""
         transformed_array = []
         for text in array:
@@ -43,7 +43,7 @@ class RemoveStopwordsSpacy(BaseTransformation):
             spacy.cli.download(spacy_model_name)
             self._spacy_model = spacy.load(spacy_model_name)
 
-    def _transform(self, array: List[str]) -> List[str]:
+    def __transform(self, array: List[str]) -> List[str]:
         """"""
         transformed_array = []
         for text in array:

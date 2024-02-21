@@ -6,7 +6,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Union
 import random
 
 import pandas as pd
@@ -168,12 +168,38 @@ class BaseSearch(ABC):
             self,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
+            clear_array: Optional[Iterable[str]] = None,
     ):
         self._original_array = original_array
         self._preprocessing = preprocessing
+        if clear_array is not None:
+            self._clear_text = clear_array
+        else:
+            self._clear_text = self._clear_text(original_array, preprocessing)
+
+    def _preprocessing_text(
+        self,
+        text: Union[Iterable[str], str],
+        preprocessing: List[BaseTransformation],
+    ) -> Union[List[str], str]:
+        """"""
+        if isinstance(text, str):
+            for transformator in preprocessing:
+                tmp_text = transformator.transform([text])[0]
+                if tmp_text:
+                    text = tmp_text
+        else:
+            for transformator in preprocessing:
+                text = transformator.transform(text)
+        return text
 
     @abstractmethod
-    def search(self, text: str, k: int) -> pd.DataFrame:
+    def search(
+        self,
+        text: str,
+        k: int,
+        ascending: bool = False,
+    ) -> pd.DataFrame:
         """Поиск наиболее схожих k-текстов из БД на text пользователя.
 
         Параметры
@@ -184,6 +210,10 @@ class BaseSearch(ABC):
 
         k : int
             Кол-во выдаваемых результатов.
+
+        ascending : bool
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
 
         Returns
         -------
@@ -205,10 +235,12 @@ class BaseEmbeddingSearch(BaseSearch):
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
             metric: str,
+            clear_array: Optional[Iterable[str]] = None,
     ):
         super().__init__(
             original_array=original_array,
             preprocessing=preprocessing,
+            clear_array=clear_array,
         )
         self._model = model
         self._embedding_database = embedding_database

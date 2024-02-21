@@ -8,7 +8,7 @@ from ..base import(
     BaseEmbedding,
     BaseSearch,
 )
-from ..embeddings import Validate
+from ..similarity_search import Validate
 
 import numpy as np
 import pandas as pd
@@ -35,12 +35,14 @@ class Pipeline:
     ):
         self._original_dataset = np.array(dataset)
         self._preprocessing = preprocessing
+
         self.__verbose('Data preparation for training has begun...', verbose)
         self._clear_dataset = self.__clear_dataset(self._original_dataset, self._preprocessing)
 
         self._model = model
         self._embedding_database = None
-        if isinstance(self._model, BaseEmbedding):
+        # Если True - обучаем модель для создания эмбеддингов.
+        if isinstance(model, BaseEmbedding):
             self.__verbose('The training of the model has begun...', verbose)
             self._embedding_database = self.__fit_transform(self._model, self._clear_dataset)
 
@@ -54,6 +56,7 @@ class Pipeline:
             embedding_database=self._embedding_database,
             original_array=self._original_dataset,
             preprocessing=self._preprocessing,
+            clear_array=self._clear_dataset,
             searcher_args=searcher_args,
         )
         self.__verbose('Pipeline ready!', verbose)
@@ -88,25 +91,28 @@ class Pipeline:
     def __create_searcher(
             self,
             searcher: Type[BaseSearch],
-            model: BaseEmbedding,
+            model: Optional[BaseEmbedding],
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
+            clear_array: Iterable[str],
             searcher_args: dict,
     ) -> BaseSearch:
         """"""
-        if isinstance(self._model, BaseEmbedding):
+        if isinstance(model, BaseEmbedding):
             return searcher(
                 model=model,
                 embedding_database=embedding_database,
                 original_array=original_array,
                 preprocessing=preprocessing,
+                clear_array=clear_array,
                 **searcher_args,
             )
         else:
             return searcher(
-                original_array=original_array,
+                original_array=self._original_dataset,
                 preprocessing=preprocessing,
+                clear_array=clear_array,
             )
 
     def load(self, path_to_filename: str) -> object:
@@ -131,20 +137,22 @@ class Pipeline:
     def validate(
             self,
             augmentation_transforms: List[BaseTransformation],
-            accuracy_top: List[int] = [1, 5, 10]
+            accuracy_top: List[int] = [1, 5, 10],
+            ascending: bool = True,
     ) -> Dict[int, float]:
         """"""
         score_metrics = Validate(
             self._searcher,
             augmentation_transforms,
             accuracy_top,
+            ascending=ascending,
         )
         self.score_metrics = score_metrics
         return score_metrics
 
-    def search(self, text: str, k: int) -> pd.DataFrame:
+    def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
         """"""
-        return self._searcher.search(text, k)
+        return self._searcher.search(text, k, ascending=ascending)
 
     def fine_tuning(
             self,
@@ -159,7 +167,26 @@ class Pipeline:
             model=self._model,
             searcher=self.__type_searcher,
             verbose=True,
-            **self.__searcher_args
+            **self.__searcher_args,
+        )
+    
+    def change_searcher(
+        self,
+        searcher: Type[BaseSearch],
+        **searcher_args,
+    ) -> None:
+        """"""
+        self.__type_searcher = searcher
+        self.__searcher_args = searcher_args
+
+        self._searcher = self.__create_searcher(
+            searcher=self.__type_searcher,
+            model=self._model,
+            embedding_database=self._embedding_database,
+            original_array=self._original_dataset,
+            preprocessing=self._preprocessing,
+            clear_array=self._clear_dataset,
+            searcher_args=searcher_args,
         )
 
 

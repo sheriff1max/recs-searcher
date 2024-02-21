@@ -2,12 +2,13 @@
 Алгоритмы для получения результатов моделей.
 """
 
-from typing import Iterable, List, Literal
+from typing import Iterable, List, Literal, Optional
 import numpy as np
 import pandas as pd
 
-from ..utils import _create_date_name
+from ..utils import create_date_name
 from ..base import BaseSearch, BaseEmbeddingSearch, BaseEmbedding, BaseTransformation
+
 from thefuzz import process
 import faiss
 import chromadb
@@ -22,37 +23,37 @@ class TheFuzzSearch(BaseSearch):
             self,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
+            clear_array: Optional[Iterable[str]] = None,
     ):
         super().__init__(
             original_array=original_array,
             preprocessing=preprocessing,
+            clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
+    def search(self, text: str, k: int, ascending: bool = False) -> pd.DataFrame:
+        text = self._preprocessing_text(text, self._preprocessing)
 
-        for transformator in self._preprocessing:
-            tmp_text = transformator.transform([text])[0]
-            if tmp_text:
-                text = tmp_text
-
-        results = process.extract(text, self._original_array, limit=k)
+        results = process.extract(text, self._clear_text, limit=k)
 
         lst_text = []
         lst_similarity = []
         for result in results:
-            lst_text.append(result[0])
             lst_similarity.append(result[1])
 
+            index = np.where(self._clear_text == result[0])
+            lst_text.append(self._original_array[index][0])
+
         df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=False)
+        df = df.sort_values(by=['similarity'], ascending=ascending)
         df = df.head(k)
         return df
 
 
 class NearestNeighborsSearch(BaseEmbeddingSearch):
     """
-    Реализация: https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html#sklearn.neighbors.NearestNeighbors
+    Поиск на основе ближайших соседей.
+    Основа на: https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html#sklearn.neighbors.NearestNeighbors
     """
 
     def __init__(
@@ -61,11 +62,12 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
+            clear_array: Optional[Iterable[str]] = None,
 
             radius: float = 1.0,
             algorithm: str = 'auto',
             leaf_size: int = 30,
-            metric: Literal['cosine', 'l1', 'l2', 'minkowski', 'manhattan', 'cosine', 'haversine'] = 'cosine',
+            metric: Literal['cosine', 'l1', 'l2', 'minkowski', 'manhattan', 'cosine'] = 'cosine',
             p: float = 2,
             metric_params: dict = None,
             n_jobs: int = None,
@@ -76,6 +78,7 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
             original_array=original_array,
             preprocessing=preprocessing,
             metric=metric,
+            clear_array=clear_array,
         )
 
         self._knn = None
@@ -86,42 +89,36 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
         self._metric_params = metric_params
         self._n_jobs = n_jobs
 
-    def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
-
+    def search(self, text: str, k: int, ascending: bool = False) -> pd.DataFrame:
         if not self._knn or self._knn.n_neighbors != k:
             self._knn = NearestNeighbors(
                 n_neighbors=k,
                 radius=self._radius,
                 algorithm=self._algorithm,
                 leaf_size=self._leaf_size,
-                metric=self._metric,  # l1, l2, minkowski, manhattan, cosine, haversine and etc from sklearn.
+                metric=self._metric,
                 p=self._p,
                 metric_params=self._metric_params,
                 n_jobs=self._n_jobs,
             ).fit(self._embedding_database)
 
-        for transformator in self._preprocessing:
-            tmp_text = transformator.transform([text])[0]
-            if tmp_text:
-                text = tmp_text
+        text = self._preprocessing_text(text, self._preprocessing)
 
-        text = [text]
-        array = self._model.transform(text)
+        array = self._model.transform([text])
 
         lst_similarity, lst_text = self._knn.kneighbors(array)
         lst_similarity = lst_similarity[0]
         lst_text = self._original_array[lst_text[0]]
-        if self._metric == 'cosine':
-            lst_similarity = list(map(lambda x: 1 - x, lst_similarity))
 
         df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=False)
+        df = df.sort_values(by=['similarity'], ascending=ascending)
         return df
 
 
 class FaissSearch(BaseEmbeddingSearch):
-    """"""
+    """
+    Основано на: https://github.com/facebookresearch/faiss
+    """
 
     def __init__(
             self,
@@ -130,6 +127,7 @@ class FaissSearch(BaseEmbeddingSearch):
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
             metric: Literal['l2', 'ip'] = 'l2',
+            clear_array: Optional[Iterable[str]] = None,
     ):
         if metric == 'l2':
             faiss_database = faiss.IndexFlatL2(embedding_database.shape[1])
@@ -142,16 +140,12 @@ class FaissSearch(BaseEmbeddingSearch):
             embedding_database=faiss_database,
             original_array=original_array,
             preprocessing=preprocessing,
-            metric=metric
+            metric=metric,
+            clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
-
-        for transformator in self._preprocessing:
-            tmp_text = transformator.transform([text])[0]
-            if tmp_text:
-                text = tmp_text
+    def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
+        text = self._preprocessing_text(text, self._preprocessing)
 
         text = [text]
         array = self._model.transform(text)
@@ -166,12 +160,14 @@ class FaissSearch(BaseEmbeddingSearch):
             lst_similarity.append(distances[i])
 
         df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'])
+        df = df.sort_values(by=['similarity'], ascending=ascending)
         return df
 
 
 class ChromaDBSearch(BaseEmbeddingSearch):
-    """"""
+    """
+    Основано на: https://github.com/chroma-core/chroma
+    """
 
     _MAX_BATCH_CHROMA_DB = 5000
 
@@ -182,9 +178,10 @@ class ChromaDBSearch(BaseEmbeddingSearch):
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
             metric: Literal['l2', 'ip', 'cosine'] = 'cosine',
+            clear_array: Optional[Iterable[str]] = None,
     ):
         chroma_client = chromadb.Client()
-        name_database = _create_date_name('database')
+        name_database = create_date_name('database')
         chroma_database = chroma_client.create_collection(
             name=name_database,
             metadata={"hnsw:space": metric}
@@ -207,16 +204,12 @@ class ChromaDBSearch(BaseEmbeddingSearch):
             embedding_database=chroma_database,
             original_array=original_array,
             preprocessing=preprocessing,
-            metric=metric
+            metric=metric,
+            clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int) -> pd.DataFrame:
-        """"""
-
-        for transformator in self._preprocessing:
-            tmp_text = transformator.transform([text])[0]
-            if tmp_text:
-                text = tmp_text
+    def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
+        text = self._preprocessing_text(text, self._preprocessing)
 
         text = [text]
         array = self._model.transform(text)
@@ -226,8 +219,7 @@ class ChromaDBSearch(BaseEmbeddingSearch):
             n_results=k,
         )
         lst_text, lst_similarity = result['ids'][0], result['distances'][0]
-        if self._metric == 'cosine':
-            lst_similarity = list(map(lambda x: 1 - x, lst_similarity))
 
         df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
+        df = df.sort_values(by=['similarity'], ascending=ascending)
         return df

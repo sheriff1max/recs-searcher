@@ -16,6 +16,7 @@ class Validate:
             searcher: BaseSearch,
             augmentation_transforms: List[BaseTransformation],
             accuracy_top: List[int] = [1, 5, 10],
+            ascending: bool = True,
     ) -> Dict[int, float]:
         """"""
         original_array = searcher._original_array
@@ -31,10 +32,10 @@ class Validate:
             augmentation_text = augmentation_array[i]
             original_text = original_array[i]
 
-            top_i_df = searcher.search(augmentation_text, max_k)
+            top_i_df = searcher.search(augmentation_text, max_k, ascending=ascending)
 
             for k in dict_true_for_k.keys():
-                if original_text in top_i_df.name.values[:k]:
+                if original_text in top_i_df.text.values[:k]:
                     dict_true_for_k[k] += 1
 
         metrics = {}

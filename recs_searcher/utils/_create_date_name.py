@@ -6,7 +6,7 @@
 import datetime
 
 
-def _create_date_name(name: str) -> str:
+def create_date_name(name: str) -> str:
     """"""
     now_datetime = []
     for symbol in str(datetime.datetime.now()):
