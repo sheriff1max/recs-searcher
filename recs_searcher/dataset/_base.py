@@ -13,11 +13,11 @@ class SentenceTransformerDataset(Dataset):
     """Обёртка дадасета для эмбеддингов из Sentence-Transformers."""
 
     def __init__(
-            self,
-            array: Iterable[str],
-            augmentation_transform: Optional[List[BaseTransformation]] = None,
+        self,
+        array: Iterable[str],
+        augmentation_transform: Optional[List[BaseTransformation]] = None,
     ):
-        super().__init__(array=array)
+        self._array = array
         self._augmentation_transform = augmentation_transform
 
     def __len__(self):

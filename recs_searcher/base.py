@@ -167,7 +167,7 @@ class BaseSearch(ABC):
     def __init__(
             self,
             original_array: Iterable[str],
-            preprocessing: List[BaseTransformation],
+            preprocessing: List[BaseTransformation] = [],
             clear_array: Optional[Iterable[str]] = None,
     ):
         self._original_array = original_array
@@ -175,7 +175,7 @@ class BaseSearch(ABC):
         if clear_array is not None:
             self._clear_text = clear_array
         else:
-            self._clear_text = self._clear_text(original_array, preprocessing)
+            self._clear_text = self._preprocessing_text(original_array, preprocessing)
 
     def _preprocessing_text(
         self,
@@ -233,8 +233,8 @@ class BaseEmbeddingSearch(BaseSearch):
             model: BaseEmbedding,
             embedding_database,
             original_array: Iterable[str],
-            preprocessing: List[BaseTransformation],
             metric: str,
+            preprocessing: List[BaseTransformation] = [],
             clear_array: Optional[Iterable[str]] = None,
     ):
         super().__init__(
@@ -249,3 +249,64 @@ class BaseEmbeddingSearch(BaseSearch):
     @abstractmethod
     def search(self, text: str, k: int) -> pd.DataFrame:
         """Та же логика, что и в классе `BaseSearch`."""
+
+
+class BaseExplain(ABC):
+    """Абстрактный класс для интерпретации схожести двух текстовых данных."""
+
+    def __init__(
+        self,
+        model: BaseEmbedding,
+        preprocessing: List[BaseTransformation] = [],
+    ):
+        self._model = model
+        self._preprocessing = preprocessing
+
+    def _preprocessing_text(
+        self,
+        text: str,
+        preprocessing: List[BaseTransformation],
+    ) -> str:
+        """"""
+        for transformator in preprocessing:
+            tmp_text = transformator.transform([text])[0]
+            if tmp_text:
+                text = tmp_text
+        return text
+
+    @abstractmethod
+    def _explain(
+        self,
+        clear_compared_text: str,
+        clear_original_text: str,
+        n_grams: int = 1,
+    ) -> pd.DataFrame:
+        """
+        Returns
+        -------
+        df: pd.DataFrame
+            Датафрейм с результатами.
+            df.columns = ['text', 'similarity']
+        """
+
+    def explain(
+        self,
+        compared_text: str,
+        original_text: str,
+        n_grams: int = 1,
+        k: int = 10,
+        ascending: bool = True,
+    ) -> pd.DataFrame:
+        """"""
+        if n_grams == 0:
+            raise ValueError('The `n_grams` parameter must be > 0')
+
+        clear_compared_text = self._preprocessing_text(compared_text, self._preprocessing)
+        clear_original_text = self._preprocessing_text(original_text, self._preprocessing)
+
+        df = self._explain(clear_compared_text, clear_original_text, n_grams=n_grams)
+        df = df.sort_values(by=['similarity'], ascending=ascending).reset_index(drop=True)
+
+        k = min(k, df.shape[0])
+        df = df.iloc[:k]
+        return df

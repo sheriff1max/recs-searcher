@@ -15,26 +15,6 @@ if platform.system() == 'Linux':
 CUR_PATH = Path(__file__).parents[0]
 
 
-def _load_csv_data(filename: str) -> pd.DataFrame:
-    """Загрузка csv-файла.
-
-    Параметры
-    ----------
-    filename : str
-        Путь до csv-файл.
-        Все csv-файлы лежат в /recs/recs/datasets/data
-        Например, 'city_Russia.csv'.
-
-    Returns
-    -------
-    df: pd.DataFrame
-        Считанный csv-файл.
-    """
-    path = CUR_PATH / Path('data') / Path(filename)
-    df = pd.read_csv(path)
-    return df
-
-
 def load_city_russia() -> pd.DataFrame:
     """Загрузка датасета с городами России.
     Датасет содержит только уникальные значения.
@@ -131,8 +111,7 @@ def load_address_krasnoyarsk() -> pd.DataFrame:
 
 
 def load_medical_organizations() -> pd.DataFrame:
-    """Загрузка датасета с названиями медицинских
-    организаций из России.
+    """Загрузка датасета с названиями медицинских организаций из России.
     Датасет содержит только уникальные значения.
 
 
@@ -152,8 +131,7 @@ def load_medical_organizations() -> pd.DataFrame:
 
 
 def load_medical_supplies() -> pd.DataFrame:
-    """Загрузка датасета с названиями медицинских
-    препаратов.
+    """Загрузка датасета с названиями медицинских препаратов.
     Датасет содержит только уникальные значения.
 
 
@@ -193,8 +171,7 @@ def load_mobile_phones() -> pd.DataFrame:
 
 
 def load_place_address_russia() -> pd.DataFrame:
-    """Загрузка датасета с местами
-    выдачи паспортов.
+    """Загрузка датасета с местами выдачи паспортов.
     Датасет содержит только уникальные значения.
 
 
@@ -231,3 +208,23 @@ def load_place_address_russia() -> pd.DataFrame:
 
 #     df = _load_csv_data('pattern.csv')
 #     return df
+
+
+def _load_csv_data(filename: str) -> pd.DataFrame:
+    """Загрузка csv-файла.
+
+    Параметры
+    ----------
+    filename : str
+        Путь до csv-файл.
+        Все csv-файлы лежат в /recs/recs/datasets/data
+        Например, 'city_Russia.csv'.
+
+    Returns
+    -------
+    df: pd.DataFrame
+        Считанный csv-файл.
+    """
+    path = CUR_PATH / Path('data') / Path(filename)
+    df = pd.read_csv(path)
+    return df
