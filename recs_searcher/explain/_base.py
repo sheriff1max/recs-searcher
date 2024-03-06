@@ -5,7 +5,7 @@
 from ..base import BaseExplain, BaseEmbedding, BaseTransformation
 from ..utils import cosine_distance, euclidean_distance
 
-from typing import List, Union, Callable, Literal
+from typing import List, Union, Callable, Literal, Tuple 
 import pandas as pd
 import numpy as np
 
@@ -50,12 +50,12 @@ class DistanceExplain(BaseExplain):
         clear_compared_text: str,
         clear_original_text: str,
         n_grams: int = 1,
-    ) -> pd.DataFrame:
+    ) -> Tuple[List[str], List[float]]:
         """"""
         tokens_list = clear_compared_text.split(' ')
 
-        text_list = []
-        similarity_list = []
+        list_text = []
+        list_similarity = []
 
         clear_original_embedding = self._model.transform([clear_original_text])
         for i in range(len(tokens_list) - n_grams + 1):
@@ -65,11 +65,10 @@ class DistanceExplain(BaseExplain):
 
             distance = self._distance(clear_original_embedding, cut_text_embedding)
 
-            text_list.append(cut_text)
-            similarity_list.append(distance)
+            list_text.append(cut_text)
+            list_similarity.append(distance)
 
-        if len(text_list) == 0:
+        if len(list_text) == 0:
             raise ValueError(f'The `n_grams` parameter must be <= {len(tokens_list)}')
 
-        df = pd.DataFrame({'text': text_list, 'similarity': similarity_list})
-        return df
+        return (list_text, list_similarity)

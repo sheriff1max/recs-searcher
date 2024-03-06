@@ -1,12 +1,12 @@
 """
-Базовые классы.
+Базовые классы модуля.
 """
 
 
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union, Tuple
 import random
 
 import pandas as pd
@@ -280,6 +280,21 @@ class BaseExplain(ABC):
         clear_compared_text: str,
         clear_original_text: str,
         n_grams: int = 1,
+    ) -> Tuple[List[str], List[float]]:
+        """
+        Returns
+        -------
+        list_text, list_similarity: Tuple[List[str]. List[float]]
+            Кортеж списков.
+        """
+
+    def explain(
+        self,
+        compared_text: str,
+        original_text: str,
+        n_grams: Union[Tuple[int, int], int] = 1,
+        k: int = 10,
+        ascending: bool = True,
     ) -> pd.DataFrame:
         """
         Returns
@@ -289,22 +304,26 @@ class BaseExplain(ABC):
             df.columns = ['text', 'similarity']
         """
 
-    def explain(
-        self,
-        compared_text: str,
-        original_text: str,
-        n_grams: int = 1,
-        k: int = 10,
-        ascending: bool = True,
-    ) -> pd.DataFrame:
-        """"""
-        if n_grams == 0:
-            raise ValueError('The `n_grams` parameter must be > 0')
-
         clear_compared_text = self._preprocessing_text(compared_text, self._preprocessing)
         clear_original_text = self._preprocessing_text(original_text, self._preprocessing)
 
-        df = self._explain(clear_compared_text, clear_original_text, n_grams=n_grams)
+        if isinstance(n_grams, int):
+            if n_grams == 0:
+                raise ValueError('The `n_grams` parameter must be > 0')
+            
+            list_text, list_similarity = self._explain(clear_compared_text, clear_original_text, n_grams=n_grams)
+        else:
+            if n_grams[0] == 0:
+                raise ValueError('The min value `n_grams` parameter must be > 0')
+            
+            list_text = []
+            list_similarity = []
+            for i in range(n_grams[0], n_grams[1]+1):
+                tmp_list_text, tmp_list_similarity = self._explain(clear_compared_text, clear_original_text, n_grams=i)
+                list_text.extend(tmp_list_text)
+                list_similarity.extend(tmp_list_similarity)
+
+        df = pd.DataFrame({'text': list_text, 'similarity': list_similarity})
         df = df.sort_values(by=['similarity'], ascending=ascending).reset_index(drop=True)
 
         k = min(k, df.shape[0])

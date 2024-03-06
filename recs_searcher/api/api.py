@@ -25,13 +25,13 @@ class Pipeline:
     """Класс полного цикла """
 
     def __init__(
-            self,
-            dataset: Iterable[str],
-            preprocessing: List[BaseTransformation],
-            searcher: Type[BaseSearch],
-            model: Optional[BaseEmbedding] = None,
-            verbose: bool = True,
-            **searcher_args,
+        self,
+        dataset: Iterable[str],
+        searcher: Type[BaseSearch],
+        preprocessing: Optional[List[BaseTransformation]] = None,
+        model: Optional[BaseEmbedding] = None,
+        verbose: bool = True,
+        **searcher_args,
     ):
         self._original_dataset = np.array(dataset)
         self._preprocessing = preprocessing
@@ -70,9 +70,9 @@ class Pipeline:
             print(message)
 
     def __clear_dataset(
-            self,
-            dataset: Iterable[str],
-            preprocessing: List[BaseTransformation],
+        self,
+        dataset: Iterable[str],
+        preprocessing: List[BaseTransformation],
     ) -> np.ndarray:
         """"""
         for transformation in preprocessing:
@@ -80,23 +80,23 @@ class Pipeline:
         return np.array(dataset)
 
     def __fit_transform(
-            self,
-            model: BaseEmbedding,
-            dataset: Iterable[str],
+        self,
+        model: BaseEmbedding,
+        dataset: Iterable[str],
     ) -> np.ndarray:
         """"""
         embedding_database = model.fit_transform(dataset)
         return embedding_database
 
     def __create_searcher(
-            self,
-            searcher: Type[BaseSearch],
-            model: Optional[BaseEmbedding],
-            embedding_database: np.ndarray,
-            original_array: Iterable[str],
-            preprocessing: List[BaseTransformation],
-            clear_array: Iterable[str],
-            searcher_args: dict,
+        self,
+        searcher: Type[BaseSearch],
+        model: Optional[BaseEmbedding],
+        embedding_database: np.ndarray,
+        original_array: Iterable[str],
+        preprocessing: List[BaseTransformation],
+        clear_array: Iterable[str],
+        searcher_args: dict,
     ) -> BaseSearch:
         """"""
         if isinstance(model, BaseEmbedding):
@@ -114,6 +114,12 @@ class Pipeline:
                 preprocessing=preprocessing,
                 clear_array=clear_array,
             )
+
+    def get_model(self) -> Optional[BaseEmbedding]:
+        return self._model
+
+    def get_preprocessing(self) -> Optional[List[BaseTransformation]]:
+        return self._preprocessing
 
     def load(self, path_to_filename: str) -> object:
         """"""
@@ -135,10 +141,10 @@ class Pipeline:
         return self
 
     def validate(
-            self,
-            augmentation_transforms: List[BaseTransformation],
-            accuracy_top: List[int] = [1, 5, 10],
-            ascending: bool = True,
+        self,
+        augmentation_transforms: List[BaseTransformation],
+        accuracy_top: List[int] = [1, 5, 10],
+        ascending: bool = True,
     ) -> Dict[int, float]:
         """"""
         score_metrics = Validate(
@@ -155,8 +161,8 @@ class Pipeline:
         return self._searcher.search(text, k, ascending=ascending)
 
     def fine_tuning(
-            self,
-            dataset: Iterable[str],
+        self,
+        dataset: Iterable[str],
     ) -> object:
         """Дообучение пайплайна на новых данных."""
         dataset = np.array(dataset)

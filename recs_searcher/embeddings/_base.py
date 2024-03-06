@@ -198,6 +198,6 @@ class EnsembleWrapperEmbedding(BaseEmbedding):
         for model in self._models:
             embedding = model.transform(array)
             embeddings.append(embedding)
-        
+
         array = concat_embeddings(embeddings, self._weights)
         return array
