@@ -126,13 +126,32 @@ class FaissSearch(BaseEmbeddingSearch):
             embedding_database: np.ndarray,
             original_array: Iterable[str],
             preprocessing: List[BaseTransformation],
-            metric: Literal['l2', 'ip'] = 'l2',
+            count_voronoi_cells: Optional[int] = 1,  # > 1 if type_optimization_searcher != None
+            type_optimization_searcher: Optional[Literal['IVF', 'IVFPQ']] = None,
+            number_centroids: Optional[int] = 8,  # For type_optimization_searcher='IVFPQ'
+            bits: Optional[int] = 8,  # For type_optimization_searcher='IVFPQ'
             clear_array: Optional[Iterable[str]] = None,
     ):
-        if metric == 'l2':
-            faiss_database = faiss.IndexFlatL2(embedding_database.shape[1])
-        elif metric == 'ip':
-            faiss_database = faiss.IndexFlatIP(embedding_database.shape[1])
+        faiss_database = faiss.IndexFlatL2(embedding_database.shape[1])
+        if count_voronoi_cells > 1:
+            if type_optimization_searcher == 'IVF':
+                faiss_database = faiss.IndexIVFFlat(
+                    faiss_database,
+                    embedding_database.shape[1],
+                    count_voronoi_cells
+                )
+            elif type_optimization_searcher == 'IVFPQ':
+                faiss_database = faiss.IndexIVFPQ(
+                    faiss_database,
+                    embedding_database.shape[1],
+                    count_voronoi_cells,
+                    number_centroids,
+                    bits,
+                )
+            else:
+                raise ValueError('If `count_voronoi_cells` > 1 then `type_optimization` must not be equal to None')
+            faiss_database.train(embedding_database)
+
         faiss_database.add(embedding_database)
 
         super().__init__(
@@ -140,7 +159,7 @@ class FaissSearch(BaseEmbeddingSearch):
             embedding_database=faiss_database,
             original_array=original_array,
             preprocessing=preprocessing,
-            metric=metric,
+            metric=None,
             clear_array=clear_array,
         )
 
@@ -188,7 +207,7 @@ class ChromaDBSearch(BaseEmbeddingSearch):
         )
 
         if original_array.shape[0] > self._MAX_BATCH_CHROMA_DB:
-            for i in range(0, original_array.shape[0]-self._MAX_BATCH_CHROMA_DB, self._MAX_BATCH_CHROMA_DB):
+            for i in range(0, original_array.shape[0] - self._MAX_BATCH_CHROMA_DB, self._MAX_BATCH_CHROMA_DB):
                 chroma_database.add(
                     embeddings=embedding_database[i:i+self._MAX_BATCH_CHROMA_DB].tolist(),
                     ids=original_array[i:i+self._MAX_BATCH_CHROMA_DB].tolist(),

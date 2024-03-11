@@ -1,6 +1,7 @@
 venv/
 .ipynb_checkpoints
 .git
+.idea
 __pycache__
 dist/
 build
