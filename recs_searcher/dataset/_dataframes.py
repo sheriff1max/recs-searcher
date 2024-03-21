@@ -110,26 +110,6 @@ def load_address_krasnoyarsk() -> pd.DataFrame:
     return df
 
 
-def load_medical_organizations() -> pd.DataFrame:
-    """Загрузка датасета с названиями медицинских организаций из России.
-    Датасет содержит только уникальные значения.
-
-
-    =================   ==============
-    Кол-во строк            193
-    Кол-во столбцов         1
-    =================   ==============
-
-    Returns
-    -------
-    df: pd.DataFrame
-        Считанные данные.
-    """
-
-    df = _load_csv_data('medical_organizations.csv')
-    return df
-
-
 def load_medical_supplies() -> pd.DataFrame:
     """Загрузка датасета с названиями медицинских препаратов.
     Датасет содержит только уникальные значения.
@@ -170,14 +150,12 @@ def load_mobile_phones() -> pd.DataFrame:
     return df
 
 
-def load_place_address_russia() -> pd.DataFrame:
-    """Загрузка датасета с местами выдачи паспортов.
-    Датасет содержит только уникальные значения.
-
+def load_russian_dictionary() -> pd.DataFrame:
+    """?
 
     =================   ==============
-    Кол-во строк            12588
-    Кол-во столбцов         1
+    Кол-во строк            ?
+    Кол-во столбцов         ?
     =================   ==============
 
     Returns
@@ -185,8 +163,7 @@ def load_place_address_russia() -> pd.DataFrame:
     df: pd.DataFrame
         Считанные данные.
     """
-
-    df = _load_csv_data('place_address_russia.csv')
+    df = _load_csv_data('russian_dictionary.csv')
     return df
 
 
@@ -210,7 +187,7 @@ def load_place_address_russia() -> pd.DataFrame:
 #     return df
 
 
-def _load_csv_data(filename: str) -> pd.DataFrame:
+def _load_csv_data(filename: str, encoding='utf-8') -> pd.DataFrame:
     """Загрузка csv-файла.
 
     Параметры
@@ -226,5 +203,5 @@ def _load_csv_data(filename: str) -> pd.DataFrame:
         Считанный csv-файл.
     """
     path = CUR_PATH / Path('data') / Path(filename)
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, encoding=encoding)
     return df
