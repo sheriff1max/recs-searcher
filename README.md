@@ -20,4 +20,4 @@
 6. similarity_search.
 
 ## Примеры применения
-Пример для быстрого использования: [пример API](https://github.com/sheriff1max/recs-searcher/blob/master/notebooks/api_example_rus.ipynb)
+Пример для быстрого использования: [пример API](https://github.com/sheriff1max/recs-searcher/blob/master/notebooks/tutorial_rus.ipynb)

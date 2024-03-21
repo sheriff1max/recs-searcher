@@ -1,126 +1,93 @@
-"""
-Алгоритмы для Pipeline валидации.
-"""
+import random
+from abc import abstractmethod
+from typing import List
 
-
-from typing import List, Literal, Optional
 from ..base import BaseTransformation
-from augmentex import WordAug, CharAug
 
 
-class AugmentexWordWrapperAugmentation(BaseTransformation):
-    """
-    Аугментация на уровне слов.
-    Основано на : https://github.com/ai-forever/augmentex
-
-    Параметры
-        ----------
-        actions: str
-            Действия на словом.
-            `replace` - заменить случайное слово его неправильным аналогом;
-            `delete` - удалить случайное слово;
-            `swap` - поменять местами два случайных слова;
-            `stopword` - добавить случайные слова из стоп-листа;
-            `split` - добавить пробелы между буквами к слову;
-            `reverse` - изменить регистр первой буквы случайного слова;
-            `text2emoji` - заменить слово соответствующим эмодзи;
-            `ngram` - заменить ngram в слове ошибочными.
-
-        min_aug: Optional[int]
-            Минимальное количество аугментаций.
-
-        max_aug: Optional[int]
-            Максимальное количество аугментаций.
-
-        unit_prob: Optional[float]
-            Процент от фразы, к которой будут применена аугментация.
-    """
-
+class BaseAugmentation(BaseTransformation):
     def __init__(
         self,
-        action: Literal['replace', 'delete', 'swap', 'stopword', 'split', 'reverse', 'text2emoji', 'ngram'],
-        min_aug: Optional[int] = 1,
-        max_aug: Optional[int] = 5,
-        unit_prob: Optional[float] = 0.3,
-        lang: Optional[Literal['rus', 'end']] = 'rus',
-        platform: Optional[Literal['pc', 'mobile']] = 'pc',
-        seed: Optional[int] = None,
-    ):
+        min_aug: int = 1,
+        max_aug: int = 5,
+        seed: int = None,
+    ) -> None:
         super().__init__(seed=seed)
-        self._action = action
-        self._augmentation = WordAug(
-            unit_prob=unit_prob,
-            min_aug=min_aug,
-            max_aug=max_aug,
-            lang=lang,
-            platform=platform,
-            random_seed=seed,
-        )
+        self.min_aug = min_aug
+        self.max_aug = max_aug
 
-    def _transform(self, array: List[str]) -> List[str]:
-        transformed_array = []
-        for text in array:
-            text = self._augmentation.augment(text=text, action=self._action)
-            transformed_array.append(text)
-        return transformed_array
-
-
-class AugmentexCharWrapperAugmentation(BaseTransformation):
-    """
-    Аугментация на уровне букв.
-    Основано на : https://github.com/ai-forever/augmentex
-
-    Параметры
-        ----------
-        action : str
-            Действия на символом.
-            `shift` - поменять местами верхний/нижний регистр в строке;
-            `orfo` - заменить правильные символы их распространенными неправильными аналогами;
-            `typo` - заменить правильные символы, как если бы они были набраны с ошибкой на клавиатуре;
-            `delete` - удалить случайный символ;
-            `insert` - вставить случайный символ;
-            `multiply` - умножение случайного символа;
-            `swap` - поменять местами два соседних символа.
-
-        min_aug: Optional[int]
-            Минимальное количество аугментаций.
-
-        max_aug: Optional[int]
-            Максимальное количество аугментаций.
-
-        mult_num: Optional[int]
-            Максимальное количество повторений символов (для action='multiply').
-
-        unit_prob: Optional[float]
-            Процент от фразы, к которой будут применена аугментация.
-    """
-
-    def __init__(
+    def __augs_count(
         self,
-        action: Literal['shift', 'orfo', 'typo', 'delete', 'insert', 'multiply', 'swap'],
-        min_aug: Optional[int] = 1,
-        max_aug: Optional[int] = 5,
-        mult_num: Optional[int] = 2,
-        unit_prob: Optional[float] = 0.3,
-        lang: Optional[Literal['rus', 'end']] = 'rus',
-        platform: Optional[Literal['pc', 'mobile']] = 'pc',
-        seed: Optional[int] = None,
-    ):
-        super().__init__(seed=seed)
-        self._action = action
-        self._augmentation = CharAug(
-            unit_prob=unit_prob,
-            min_aug=min_aug,
-            max_aug=max_aug,
-            mult_num=mult_num,
-            lang=lang,
-            platform=platform,
-            random_seed=seed,
-        )
+        size: int,
+        rate: float,
+    ) -> int:
+        """Подсчитывает количество аугментаций и выполняет обрезание
+        по максимальному или минимальному числу.
+        
+        Параметры
+        ----------
+            size: int
+                Количество символов или слов в тексте.
+            rate: float
+                Процент символов или слов, к которым будет применено увеличение.
 
+        Returns
+        -------
+            int: количество аугментаций.
+        """
+        cnt = 0
+        if size > 1:
+            cnt = int(rate * size)
+        return cnt
+
+    def __get_random_idx(
+        self,
+        inputs: List[str],
+        aug_count: int,
+    ) -> List[int]:
+        """Рандомно выбирает индексы для аугментации.
+
+        Параметры
+        ----------
+            inputs: List[str]
+                Список символов или слов.
+            aug_count: int
+                Количество аугментаций.
+
+        Returns:
+        ----------
+            List[int]: список индексов.
+        """
+        token_idxes = [i for i in range(len(inputs))]
+        aug_idxs = random.sample(token_idxes, aug_count)
+        return aug_idxs
+
+    def _aug_indexing(
+        self,
+        inputs: List[str],
+        rate: float,
+        clip: bool = False
+    ) -> List[int]:
+        """
+        Args:
+            inputs: List[str]
+                Список символов или слов.
+            rate: float
+                Процент символов или слов, к которым будет применено увеличение.
+            clip: bool
+                Учитывает максимальное и минимальное значения. По умолчанию False.
+
+        Returns:
+            List[int]: List of indices.
+        """
+        aug_count = self.__augs_count(len(inputs), rate)
+        if clip:
+            aug_count = max(aug_count, self.min_aug)
+            aug_count = min(aug_count, self.max_aug)
+
+        aug_idxs = self.__get_random_idx(inputs, aug_count)
+        return aug_idxs
+
+    @abstractmethod
     def _transform(self, array: List[str]) -> List[str]:
-        transformed_array = []
-        for text in array:
-            text = self._augmentation.augment(text=text, action=self._action)
-            transformed_array.append(text)
-        return transformed_array
+        pass

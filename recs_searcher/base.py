@@ -57,6 +57,7 @@ class BaseTransformation(ABC):
         array = list(array)
 
         random.seed(self._seed)
+        np.random.seed(self._seed)
         array = self._transform(array)
         return array
 

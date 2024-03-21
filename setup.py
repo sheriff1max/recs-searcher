@@ -7,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.7',
+  version='0.0.26',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
@@ -23,7 +23,6 @@ setup(
     'chromadb',
     'datasets',
     'faiss-cpu',
-    'gensim',
     'sentence-transformers',
     'pymorphy3',
     'scikit-learn',
