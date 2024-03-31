@@ -195,6 +195,31 @@ class BaseSearch(ABC):
         return text
 
     @abstractmethod
+    def _search(
+        self,
+        clear_text: str,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
+        """Поиск наиболее схожих текстов из БД на clear_text пользователя.
+
+        Параметры
+        ----------
+        clear_text : str
+            Пользовательский текст, которому нужно найти наиболее схожие тексты из БД.
+
+        k : int
+            Кол-во выдаваемых результатов.
+
+        Returns
+        -------
+        list_texts, list_similarity: Tuple[List[str], List[float]]
+            Вычисленные результаты.
+            В списке `list_texts` хранится текст, который похож на текст пользователя.
+            В списке `list_similarity` хранится схожесть пользовательского текста на текст
+                из бд в виде числа.
+            Все данные соотносятся по индексу в этих двух списках.
+        """
+
     def search(
         self,
         text: str,
@@ -222,6 +247,12 @@ class BaseSearch(ABC):
             Датафрейм с результатами.
             df.columns = ['text', 'similarity']
         """
+        text = self._preprocessing_text(text, self._preprocessing)
+
+        list_texts, list_similarity = self._search(text, k)
+        df = pd.DataFrame({'text': list_texts, 'similarity': list_similarity})
+        df = df.sort_values(by=['similarity'], ascending=ascending)
+        return df
 
 
 class BaseEmbeddingSearch(BaseSearch):
@@ -248,8 +279,68 @@ class BaseEmbeddingSearch(BaseSearch):
         self._metric = metric
 
     @abstractmethod
-    def search(self, text: str, k: int) -> pd.DataFrame:
-        """Та же логика, что и в классе `BaseSearch`."""
+    def _search(
+        self,
+        array: np.ndarray,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
+        """Поиск наиболее схожих k-векторов из БД на array пользователя.
+
+        Параметры
+        ----------
+        array : np.ndarray
+            Пользовательский текст в виде эмбеддинга, которому нужно найти наиболее
+            схожие вектора из БД.
+
+        k : int
+            Кол-во выдаваемых результатов.
+
+        Returns
+        -------
+        list_texts, list_similarity: Tuple[List[str], List[float]]
+            Вычисленные результаты.
+            В списке `list_texts` хранится текст, который похож на текст пользователя.
+            В списке `list_similarity` хранится схожесть пользовательского текста на текст
+                из бд в виде числа.
+            Все данные соотносятся по индексу в этих двух списках.
+        """
+    
+    def search(
+        self,
+        text: str,
+        k: int,
+        ascending: bool = False,
+    ) -> pd.DataFrame:
+        """Поиск наиболее схожих k-текстов из БД на text пользователя.
+
+        Параметры
+        ----------
+        text : str
+            Пользовательский текст, которому нужно найти наиболее
+            схожий текст из БД.
+
+        k : int
+            Кол-во выдаваемых результатов.
+
+        ascending : bool
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Датафрейм с результатами.
+            df.columns = ['text', 'similarity']
+        """
+        text = self._preprocessing_text(text, self._preprocessing)
+
+        text = [text]
+        array = self._model.transform(text)
+
+        list_texts, list_similarity = self._search(array, k)
+        df = pd.DataFrame({'text': list_texts, 'similarity': list_similarity})
+        df = df.sort_values(by=['similarity'], ascending=ascending)
+        return df
 
 
 class BaseExplain(ABC):

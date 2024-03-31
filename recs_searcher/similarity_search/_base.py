@@ -2,7 +2,7 @@
 Алгоритмы для получения результатов моделей.
 """
 
-from typing import Iterable, List, Literal, Optional
+from typing import Iterable, List, Literal, Optional, Tuple
 import numpy as np
 import pandas as pd
 
@@ -31,23 +31,22 @@ class TheFuzzSearch(BaseSearch):
             clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int, ascending: bool = False) -> pd.DataFrame:
-        text = self._preprocessing_text(text, self._preprocessing)
+    def _search(
+        self,
+        clear_text: str,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
+        results = process.extract(clear_text, self._clear_text, limit=k)
 
-        results = process.extract(text, self._clear_text, limit=k)
-
-        lst_text = []
-        lst_similarity = []
+        list_texts = []
+        list_similarity = []
         for result in results:
-            lst_similarity.append(result[1])
+            list_similarity.append(result[1])
 
             index = np.where(self._clear_text == result[0])
-            lst_text.append(self._original_array[index][0])
+            list_texts.append(self._original_array[index][0])
 
-        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=ascending)
-        df = df.head(k)
-        return df
+        return list_texts, list_similarity
 
 
 class NearestNeighborsSearch(BaseEmbeddingSearch):
@@ -89,7 +88,11 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
         self._metric_params = metric_params
         self._n_jobs = n_jobs
 
-    def search(self, text: str, k: int, ascending: bool = False) -> pd.DataFrame:
+    def _search(
+        self,
+        array: np.ndarray,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
         if not self._knn or self._knn.n_neighbors != k:
             self._knn = NearestNeighbors(
                 n_neighbors=k,
@@ -102,17 +105,10 @@ class NearestNeighborsSearch(BaseEmbeddingSearch):
                 n_jobs=self._n_jobs,
             ).fit(self._embedding_database)
 
-        text = self._preprocessing_text(text, self._preprocessing)
-
-        array = self._model.transform([text])
-
-        lst_similarity, lst_text = self._knn.kneighbors(array)
-        lst_similarity = lst_similarity[0]
-        lst_text = self._original_array[lst_text[0]]
-
-        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=ascending)
-        return df
+        list_similarity, list_texts = self._knn.kneighbors(array)
+        list_similarity = list_similarity[0]
+        list_texts = self._original_array[list_texts[0]]
+        return list_texts, list_similarity
 
 
 class FaissSearch(BaseEmbeddingSearch):
@@ -163,24 +159,20 @@ class FaissSearch(BaseEmbeddingSearch):
             clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
-        text = self._preprocessing_text(text, self._preprocessing)
-
-        text = [text]
-        array = self._model.transform(text)
-
+    def _search(
+        self,
+        array: np.ndarray,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
         distances, indices = self._embedding_database.search(array, k)
         distances, indices = distances[0], indices[0]
 
-        lst_text = []
-        lst_similarity = []
+        list_texts = []
+        list_similarity = []
         for i in range(indices.shape[0]):
-            lst_text.append(self._original_array[indices[i]])
-            lst_similarity.append(distances[i])
-
-        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=ascending)
-        return df
+            list_texts.append(self._original_array[indices[i]])
+            list_similarity.append(distances[i])
+        return list_texts, list_similarity
 
 
 class ChromaDBSearch(BaseEmbeddingSearch):
@@ -227,18 +219,14 @@ class ChromaDBSearch(BaseEmbeddingSearch):
             clear_array=clear_array,
         )
 
-    def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
-        text = self._preprocessing_text(text, self._preprocessing)
-
-        text = [text]
-        array = self._model.transform(text)
-
+    def _search(
+        self,
+        array: np.ndarray,
+        k: int,
+    ) -> Tuple[List[str], List[float]]:
         result = self._embedding_database.query(
             query_embeddings=array.tolist(),
             n_results=k,
         )
-        lst_text, lst_similarity = result['ids'][0], result['distances'][0]
-
-        df = pd.DataFrame({'text': lst_text, 'similarity': lst_similarity})
-        df = df.sort_values(by=['similarity'], ascending=ascending)
-        return df
+        list_texts, list_similarity = result['ids'][0], result['distances'][0]
+        return list_texts, list_similarity

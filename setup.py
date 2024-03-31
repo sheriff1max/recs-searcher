@@ -7,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.26',
+  version='0.0.8',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
