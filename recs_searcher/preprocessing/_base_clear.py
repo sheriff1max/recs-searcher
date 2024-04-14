@@ -11,13 +11,12 @@ import spacy
 
 
 class TextLower(BaseTransformation):
-    """"""
+    """Алгоритм привод текст к нижнему регистру."""
 
     def __init__(self):
         super().__init__()
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = text.lower()
@@ -26,14 +25,13 @@ class TextLower(BaseTransformation):
 
 
 class RemovePunct(BaseTransformation):
-    """"""
+    """Алгоритм удаляет все пунктуационные знаки из текста."""
 
     def __init__(self):
         super().__init__()
         self._whitespaces = ''.join([' ' for _ in range(len(string.punctuation))])
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = text.translate(str.maketrans(string.punctuation, self._whitespaces, ''))
@@ -42,13 +40,12 @@ class RemovePunct(BaseTransformation):
 
 
 class RemoveNumber(BaseTransformation):
-    """"""
+    """Алгоритм удаляет все числа из текста."""
 
     def __init__(self):
         super().__init__()
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = re.sub(r'\d+', "", text)
@@ -57,13 +54,12 @@ class RemoveNumber(BaseTransformation):
 
 
 class RemoveWhitespace(BaseTransformation):
-    """"""
+    """Алгоритм удаляет все лишние пробелы в тексте."""
 
     def __init__(self):
         super().__init__()
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = text.replace('  ', ' ').strip()
@@ -72,14 +68,13 @@ class RemoveWhitespace(BaseTransformation):
 
 
 class RemoveHTML(BaseTransformation):
-    """"""
+    """Алгоритм удаляет всю HTML-разметку из текста."""
 
     def __init__(self):
         super().__init__()
         self._pattern = re.compile('<.*?>')
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = re.sub(self._pattern, '', text) 
@@ -88,14 +83,13 @@ class RemoveHTML(BaseTransformation):
 
 
 class RemoveURL(BaseTransformation):
-    """"""
+    """Алгоритм удаляет все ссылки из текста."""
 
     def __init__(self):
         super().__init__()
         self._pattern = re.compile(r'https?://\S+|www\.\S+')
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = re.sub(self._pattern, '', text) 
@@ -104,7 +98,7 @@ class RemoveURL(BaseTransformation):
 
 
 class RemoveEmoji(BaseTransformation):
-    """"""
+    """Алгоритм удаляет все эмодзи из текста."""
 
     def __init__(self):
         super().__init__()
@@ -116,7 +110,6 @@ class RemoveEmoji(BaseTransformation):
                                 "]+", flags=re.UNICODE)
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             text = re.sub(self._pattern, '', text)
@@ -125,7 +118,8 @@ class RemoveEmoji(BaseTransformation):
 
 
 class SpacyClear(BaseTransformation):
-    """Много разных чисток."""
+    """Сборный алгоритм предобработки текстовых данных,
+    основанный на библиотеке `Spacy`."""
 
     def __init__(self,
         spacy_model_name: str,
@@ -154,7 +148,6 @@ class SpacyClear(BaseTransformation):
             self._spacy_model = spacy.load(spacy_model_name)
 
     def _transform(self, array: List[str]) -> List[str]:
-        """"""
         transformed_array = []
         for text in array:
             cleared_text = []
@@ -163,21 +156,19 @@ class SpacyClear(BaseTransformation):
             for token in doc:
                 if self._remove_punct and token.is_punct:
                     continue
-                # Удаляю ссылки.
+                # Удаление ссылки.
                 elif self._remove_url and token.like_url:
                     continue
-                # Удаляю почтовые адреса.
+                # Удаление почтового адреса.
                 elif self._remove_email and token.like_email:
                     continue
-                # Удаляю числа.
-                elif self._remove_digit and token.is_digit:
+                # Удаление чисел.
+                elif self._remove_digit and token.is_digit and self._remove_num and token.like_num:
                     continue
-                # Удаляю ковычки
+                # Удаление ковычки.
                 elif self._remove_quote and token.is_quote:
                     continue
-                elif self._remove_num and token.like_num:
-                    continue
-                # Удаляю пробелы и `\n`
+                # Удаление пробелов и `\n`.
                 elif self._remove_space and token.is_space:
                     continue
                 cleared_text.append(token.text)

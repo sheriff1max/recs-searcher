@@ -72,7 +72,6 @@ class BaseEmbedding(ABC):
         ----------
         path_folder_load : str
             Путь, где лежит файл.
-
         filename : str
             Название файла для загрузки.
 
@@ -94,7 +93,6 @@ class BaseEmbedding(ABC):
         ----------
         path_folder_save : str
             Путь сохранения файла.
-
         filename : str
             Название файла для сохранения.
 
@@ -206,7 +204,6 @@ class BaseSearch(ABC):
         ----------
         clear_text : str
             Пользовательский текст, которому нужно найти наиболее схожие тексты из БД.
-
         k : int
             Кол-во выдаваемых результатов.
 
@@ -233,7 +230,6 @@ class BaseSearch(ABC):
         text : str
             Пользовательский текст, которому нужно найти наиболее
             схожий текст из БД.
-
         k : int
             Кол-во выдаваемых результатов.
 
@@ -291,7 +287,6 @@ class BaseEmbeddingSearch(BaseSearch):
         array : np.ndarray
             Пользовательский текст в виде эмбеддинга, которому нужно найти наиболее
             схожие вектора из БД.
-
         k : int
             Кол-во выдаваемых результатов.
 
@@ -318,10 +313,8 @@ class BaseEmbeddingSearch(BaseSearch):
         text : str
             Пользовательский текст, которому нужно найти наиболее
             схожий текст из БД.
-
         k : int
             Кол-во выдаваемых результатов.
-
         ascending : bool
             Флаг сортировки полученных результатов.
             False - убывающая, True - возрастающая сортировка.
@@ -359,7 +352,21 @@ class BaseExplain(ABC):
         text: str,
         preprocessing: List[BaseTransformation],
     ) -> str:
-        """"""
+        """
+        Предобработка текста.
+
+        Параметры
+        ----------
+        text : str
+            Необработанный текст.
+        preprocessing : List[BaseTransformation]
+            Список алгоритмов для предобработка текста.
+
+        Returns
+        -------
+        text: str
+            Обработанный текст.
+        """
         for transformator in preprocessing:
             tmp_text = transformator.transform([text])[0]
             if tmp_text:
@@ -374,6 +381,18 @@ class BaseExplain(ABC):
         n_grams: int = 1,
     ) -> Tuple[List[str], List[float]]:
         """
+        Поиск наиболее схожих N-грамм из clear_compared_text в clear_original_text.
+
+        Параметры
+        ----------
+        clear_compared_text : str
+            Пользовательский текст, в котором нужно найти n-граммы,
+            похожие на clear_original_text.
+        clear_original_text : str
+            Текст, с которым сравнивается clear_compared_text.
+        n_grams : int
+            Длина N-грамм.
+
         Returns
         -------
         list_text, list_similarity: Tuple[List[str]. List[float]]
@@ -389,6 +408,24 @@ class BaseExplain(ABC):
         ascending: bool = True,
     ) -> pd.DataFrame:
         """
+        Поиск наиболее схожих N-грамм из compared_text в original_text.
+
+        Параметры
+        ----------
+        compared_text : str
+            Пользовательский текст, в котором нужно найти n-граммы,
+            похожие на original_text.
+        original_text : str
+            Текст, с которым сравнивается compared_text.
+        n_grams : Union[Tuple[int, int], int]
+            Длины N-грамм, которые будут оцениваться.
+            Может приниматься либо одно число, либо список чисел.
+        k : int
+            Кол-во выдаваемых результатов.
+        ascending : bool
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
         Returns
         -------
         df: pd.DataFrame

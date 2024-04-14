@@ -4,7 +4,6 @@
 
 from typing import Iterable, List, Literal, Optional, Tuple
 import numpy as np
-import pandas as pd
 
 from ..utils import create_date_name
 from ..base import BaseSearch, BaseEmbeddingSearch, BaseEmbedding, BaseTransformation
@@ -17,7 +16,9 @@ from sklearn.neighbors import NearestNeighbors
 
 class TheFuzzSearch(BaseSearch):
     """Класс поиска наиболее похожих слов в БД
-    с помощью расстояния Ливенштейна."""
+    с помощью расстояния Ливенштейна.
+    Основано на: https://github.com/seatgeek/thefuzz
+    """
 
     def __init__(
             self,

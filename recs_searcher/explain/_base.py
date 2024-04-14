@@ -6,7 +6,6 @@ from ..base import BaseExplain, BaseEmbedding, BaseTransformation
 from ..utils import cosine_distance, euclidean_distance
 
 from typing import List, Union, Callable, Literal, Tuple 
-import pandas as pd
 import numpy as np
 
 
@@ -37,7 +36,20 @@ class DistanceExplain(BaseExplain):
             Callable[[np.ndarray, np.ndarray], float],
         ],
     ) -> Callable[[np.ndarray, np.ndarray], float]:
-        """"""
+        """
+        Определение функции для подсчёта расстояния между 2 векторами.
+
+        Параметры
+        ----------
+        distance : Union[Literal['cosine', 'euclidean'], Callable[[np.ndarray, np.ndarray], float]]
+            Текст - для получения функции, реализованной в данном проекта.
+            Функция - для встраивания своей функции для подсчёта расстояния.
+
+        Returns
+        -------
+        distance: Callable[[np.ndarray, np.ndarray], float]
+            Функция для подсчёта расстояния между двумя векторами.
+        """
         if distance == 'cosine':
             return cosine_distance
         elif distance == 'euclidean':
@@ -51,7 +63,6 @@ class DistanceExplain(BaseExplain):
         clear_original_text: str,
         n_grams: int = 1,
     ) -> Tuple[List[str], List[float]]:
-        """"""
         tokens_list = clear_compared_text.split(' ')
 
         list_text = []

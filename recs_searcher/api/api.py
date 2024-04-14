@@ -1,12 +1,13 @@
 """ api.py
 Взаимодействие с системой."""
 
-from typing import List, Iterable, Dict, Type, Optional
+from typing import List, Iterable, Dict, Type, Optional, Union, Tuple
 
 from ..base import(
     BaseTransformation,
     BaseEmbedding,
     BaseSearch,
+    BaseExplain,
 )
 from ..similarity_search import Validate
 
@@ -22,7 +23,32 @@ if platform.system() == 'Linux':
 
 
 class Pipeline:
-    """Класс полного цикла """
+    """API для взаимодействия с алгоритмами.
+    С помощью данного класса можно:
+        1. обучить выбранную модель на пользовательском датасете;
+        2. сохранять и загружать собранный и обученный pipeline для
+            последующего использования;
+        3. производить вычисления для пользовательского ввода;
+        4. проверить точность работы обученного pipeline;
+        5. получить интерпретацию полученных результатов.
+
+    Параметры
+        ----------
+        dataset : Iterable[str]
+            Датасет, на котором будут обучаться алгоритмы.
+        searcher : Type[BaseSearch]
+            Класс, на основе которого будут искаться схожие текста.
+        preprocessing : Optional[List[BaseTransformation]]
+            Список предобработки текстовых данных.
+        model : Optional[BaseEmbedding]
+            Модель для создания эмбеддингов.
+        explainer : Optional[Type[BaseExplain]]
+            Алгоритм для интерпретации результатов и объяснения
+            схожести двух текстов.
+        verbose : Optional[bool]
+            Вывод этапов Pipeline.
+        searcher_args : Параметры для настройки `searcher` типа `BaseSearch`.
+    """
 
     def __init__(
         self,
@@ -30,7 +56,8 @@ class Pipeline:
         searcher: Type[BaseSearch],
         preprocessing: Optional[List[BaseTransformation]] = None,
         model: Optional[BaseEmbedding] = None,
-        verbose: bool = True,
+        explainer: Optional[Type[BaseExplain]] = None,
+        verbose: Optional[bool] = True,
         **searcher_args,
     ):
         self._original_dataset = np.array(dataset)
@@ -45,6 +72,8 @@ class Pipeline:
         if isinstance(model, BaseEmbedding):
             self.__verbose('The training of the model has begun...', verbose)
             self._embedding_database = self.__fit_transform(self._model, self._clear_dataset)
+
+        self.__type_explainer = explainer
 
         # Класс поисковика для будущего дообучения.
         self.__type_searcher = searcher
@@ -65,7 +94,20 @@ class Pipeline:
         self.score_metrics = None
 
     def __verbose(self, message: str, verbose: bool) -> None:
-        """"""
+        """
+        Вывод инофрмации об этапе обучения pipeline.
+
+        Параметры
+        ----------
+        message : str
+            Выводимое сообщение.
+        verbose : bool
+            Выводить сообщение или нет.
+
+        Returns
+        -------
+        None
+        """
         if verbose:
             print(message)
 
@@ -74,7 +116,21 @@ class Pipeline:
         dataset: Iterable[str],
         preprocessing: List[BaseTransformation],
     ) -> np.ndarray:
-        """"""
+        """
+        Предобработка текста.
+
+        Параметры
+        ----------
+        dataset : Iterable[str]
+            Необработанный датасет текстов.
+        preprocessing : List[BaseTransformation]
+            Список алгоритмов для предобработка текста.
+
+        Returns
+        -------
+        text: np.ndarray
+            Массив обработанных текстов.
+        """
         for transformation in preprocessing:
             dataset = transformation.transform(dataset)
         return np.array(dataset)
@@ -84,7 +140,21 @@ class Pipeline:
         model: BaseEmbedding,
         dataset: Iterable[str],
     ) -> np.ndarray:
-        """"""
+        """
+        Обучение на входном датасете и преобразование его в эмбеддинги.
+
+        Параметры
+        ----------
+        model : BaseEmbedding
+            Модель для обучения.
+        dataset : Iterable[str]
+            Датасет текстов.
+
+        Returns
+        -------
+        text: np.ndarray
+            Датасет в виде эмбеддингов.
+        """
         embedding_database = model.fit_transform(dataset)
         return embedding_database
 
@@ -98,7 +168,31 @@ class Pipeline:
         clear_array: Iterable[str],
         searcher_args: dict,
     ) -> BaseSearch:
-        """"""
+        """
+        Инициализация поискового алгоритма.
+
+        Параметры
+        ----------
+        searcher : Type[BaseSearch]
+            Тип поискового алгоритма.
+        model : BaseEmbedding
+            Модель для обучения.
+        embedding_database : np.ndarray
+            Датасет в виде эмбеддингов.
+        original_array : Iterable[str]
+            Исходный датасет.
+        preprocessing : List[BaseTransformation]
+            Список алгоритмов для предобработки текстов.
+        clear_array : Iterable[str]
+            Предобработанный текст.
+        searcher_args : dict
+            Словарь аргументов для поискового алгоритма.
+
+        Returns
+        -------
+        searcher: BaseSearch
+            Инициализированный объект поискового алгоритма.
+        """
         if isinstance(model, BaseEmbedding):
             return searcher(
                 model=model,
@@ -122,12 +216,38 @@ class Pipeline:
         return self._preprocessing
 
     def load(self, path_to_filename: str) -> object:
-        """"""
+        """
+        Загрузка pipeline из файла.
+
+        Параметры
+        ----------
+        path_to_filename : str
+            Путь до файла.
+
+        Returns
+        -------
+        self: Pipeline
+            Загруженный pipeline.
+        """
         self = load_pipeline(path_to_filename)
         return self
 
     def save(self, path_folder_save: str, filename: str) -> object:
-        """"""
+        """
+        Сохранение pipeline в файл pickle.
+
+        Параметры
+        ----------
+        path_folder_save : str
+            Путь до папки, куда сохранить файл.
+        filename : str
+            Название файла.
+
+        Returns
+        -------
+        self: Pipeline
+            Текущий pipeline.
+        """
         path_folder_save = Path(path_folder_save)
         if not path_folder_save.exists():
             path_folder_save.mkdir()
@@ -143,10 +263,27 @@ class Pipeline:
     def validate(
         self,
         augmentation_transforms: List[BaseTransformation],
-        accuracy_top: List[int] = [1, 5, 10],
-        ascending: bool = True,
+        accuracy_top: Optional[List[int]] = [1, 5, 10],
+        ascending: Optional[bool] = True,
     ) -> Dict[int, float]:
-        """"""
+        """
+        Получение метрик точности обученного pipeline.
+
+        Параметры
+        ----------
+        augmentation_transforms : List[BaseTransformation]
+            Список алгоритмов аугментации для создания ошибок в тексте.
+        accuracy_top : Optional[List[int]]
+            Список для оценивания N@Accuracy.
+        ascending : Optional[bool]
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
+        Returns
+        -------
+        score_metrics: Dict[int, float]
+            Посчитанные метрики.
+        """
         score_metrics = Validate(
             self._searcher,
             augmentation_transforms,
@@ -157,17 +294,88 @@ class Pipeline:
         return score_metrics
 
     def search(self, text: str, k: int, ascending: bool = True) -> pd.DataFrame:
-        """"""
+        """Поиск наиболее схожих k-текстов из БД на text пользователя.
+
+        Параметры
+        ----------
+        text : str
+            Пользовательский текст, которому нужно найти наиболее
+            схожий текст из БД.
+        k : int
+            Кол-во выдаваемых результатов.
+        ascending : bool
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Датафрейм с результатами.
+            df.columns = ['text', 'similarity']
+        """
         return self._searcher.search(text, k, ascending=ascending)
 
-    def fine_tuning(
+    def explain(
         self,
-        dataset: Iterable[str],
-    ) -> object:
-        """Дообучение пайплайна на новых данных."""
+        compared_text: str,
+        original_text: str,
+        n_grams: Union[Tuple[int, int], int] = 1,
+        k: int = 10,
+        ascending: bool = True,
+        **explainer_args
+    ) -> pd.DataFrame:
+        """Поиск наиболее схожих k-текстов из БД на text пользователя.
+
+        Параметры
+        ----------
+        text : str
+            Пользовательский текст, которому нужно найти наиболее
+            схожий текст из БД.
+        k : int
+            Кол-во выдаваемых результатов.
+        ascending : bool
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Датафрейм с результатами.
+            df.columns = ['text', 'similarity']
+        """
+        if self.__type_explainer is None:
+            raise ValueError(f'The `explainer` parameter was not declared during initialization.')
+
+        explainer = self.__type_explainer(
+            model=self.get_model(),
+            preprocessing=self.get_preprocessing(),
+            **explainer_args,
+        )
+        return explainer.explain(
+            compared_text=compared_text,
+            original_text=original_text,
+            n_grams=n_grams,
+            k=k,
+            ascending=ascending,
+        )
+
+    def fine_tuning(self, dataset: Iterable[str]) -> object:
+        """
+        Дообучение пайплайна на новых данных.
+
+        Параметры
+        ----------
+        dataset : Iterable[str]
+            Датасет текстов.
+
+        Returns
+        -------
+        pipeline: Pipeline
+            Новый объект Pipeline.
+        """
         dataset = np.array(dataset)
         dataset = np.append(self._original_dataset, dataset)
-        return Pipeline(
+        self = Pipeline(
             dataset=dataset,
             preprocessing=self._preprocessing,
             model=self._model,
@@ -175,13 +383,27 @@ class Pipeline:
             verbose=True,
             **self.__searcher_args,
         )
-    
+        return self
+
     def change_searcher(
         self,
         searcher: Type[BaseSearch],
         **searcher_args,
     ) -> None:
-        """"""
+        """
+        Изменение поискового алгоритма.
+
+        Параметры
+        ----------
+        searcher : Type[BaseSearch]
+            Тип поискового алгоритма.
+        searcher_args : dict
+            Словарь аргументов для поискового алгоритма.
+
+        Returns
+        -------
+        None
+        """
         self.__type_searcher = searcher
         self.__searcher_args = searcher_args
 
@@ -197,7 +419,19 @@ class Pipeline:
 
 
 def load_pipeline(path_to_filename: str) -> Pipeline:
-    """"""
+    """
+    Загрузка pipeline из файла.
+
+    Параметры
+    ----------
+    path_to_filename : str
+        Путь до файла.
+
+    Returns
+    -------
+    self: Pipeline
+        Загруженный pipeline.
+    """
     if '.pkl' not in path_to_filename:
         path_to_filename += '.pkl'
 

@@ -16,7 +16,6 @@ def concat_embeddings(
         ----------
         embeddings : List[np.ndarray]
             Список массивов-эмбеддингов.
-
         weights : List[float]
             Список весов важности каждого эмбеддинга при конкатенации.
 

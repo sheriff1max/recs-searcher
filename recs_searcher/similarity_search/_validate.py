@@ -18,7 +18,26 @@ class Validate:
             accuracy_top: List[int] = [1, 5, 10],
             ascending: bool = True,
     ) -> Dict[int, float]:
-        """"""
+        """
+        Получение метрик точности обученной модели.
+
+        Параметры
+        ----------
+        searcher : BaseSearch
+            Алгоритм на основе которого будут искаться схожие текста.
+        augmentation_transforms : List[BaseTransformation]
+            Список алгоритмов аугментации для создания ошибок в тексте.
+        accuracy_top : Optional[List[int]]
+            Список для оценивания N@Accuracy.
+        ascending : Optional[bool]
+            Флаг сортировки полученных результатов.
+            False - убывающая, True - возрастающая сортировка.
+
+        Returns
+        -------
+        score_metrics: Dict[int, float]
+            Посчитанные метрики.
+        """
         original_array = searcher._original_array
 
         augmentation_array = searcher._original_array
@@ -38,9 +57,9 @@ class Validate:
                 if original_text in top_i_df.text.values[:k]:
                     dict_true_for_k[k] += 1
 
-        metrics = {}
+        score_metrics = {}
         for k in dict_true_for_k.keys():
             accuracy_k = dict_true_for_k[k] / len(original_array)
-            metrics[k] = accuracy_k
+            score_metrics[k] = accuracy_k
             print(f'Top {k}Acc = {accuracy_k}')
-        return metrics
+        return score_metrics
