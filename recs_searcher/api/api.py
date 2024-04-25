@@ -9,6 +9,7 @@ from ..base import(
     BaseSearch,
     BaseExplain,
 )
+from ..similarity_search import *
 from ..similarity_search import Validate
 
 import numpy as np
@@ -75,8 +76,8 @@ class Pipeline:
 
         self.__type_explainer = explainer
 
-        # Класс поисковика для будущего дообучения.
-        self.__type_searcher = searcher
+        # Название поисковика.
+        self.__type_searcher = searcher.__name__  # TODO: костыль. Фиксит краш при сохранении ChromaDBSearcher
         self.__searcher_args = searcher_args
 
         self._searcher = self.__create_searcher(
@@ -160,7 +161,7 @@ class Pipeline:
 
     def __create_searcher(
         self,
-        searcher: Type[BaseSearch],
+        searcher: str,
         model: Optional[BaseEmbedding],
         embedding_database: np.ndarray,
         original_array: Iterable[str],
@@ -173,8 +174,8 @@ class Pipeline:
 
         Параметры
         ----------
-        searcher : Type[BaseSearch]
-            Тип поискового алгоритма.
+        searcher : str
+            Название поискового алгоритма.
         model : BaseEmbedding
             Модель для обучения.
         embedding_database : np.ndarray
@@ -193,6 +194,7 @@ class Pipeline:
         searcher: BaseSearch
             Инициализированный объект поискового алгоритма.
         """
+        searcher = eval(searcher)
         if isinstance(model, BaseEmbedding):
             return searcher(
                 model=model,
@@ -215,7 +217,7 @@ class Pipeline:
     def get_preprocessing(self) -> Optional[List[BaseTransformation]]:
         return self._preprocessing
 
-    def load(self, path_to_filename: str) -> object:
+    def load(self, path_to_filename: str) -> 'Pipeline':
         """
         Загрузка pipeline из файла.
 
@@ -230,7 +232,6 @@ class Pipeline:
             Загруженный pipeline.
         """
         self = load_pipeline(path_to_filename)
-        # TODO: При загрузке - вызывать `self.change_searcher``
         return self
 
     def save(self, path_folder_save: str, filename: str) -> object:
@@ -257,7 +258,8 @@ class Pipeline:
             filename += '.pkl'
         path = path_folder_save / filename
 
-        # TODO: При сохранении - удалять `self._searcher`
+        # Удаляем объект поискового алгоритма для уменьшения объёма файла.
+        self._searcher = None
 
         with open(path, 'wb') as f:
             pickle.dump(self, f)
@@ -406,25 +408,27 @@ class Pipeline:
 
     def change_searcher(
         self,
-        searcher: Type[BaseSearch],
+        searcher: Optional[Type[BaseSearch]] = None,
         **searcher_args,
     ) -> None:
         """
-        Изменение поискового алгоритма.
+        Изменение или пересоздание поискового алгоритма.
 
         Параметры
         ----------
-        searcher : Type[BaseSearch]
+        searcher : Optional[Type[BaseSearch]]
             Тип поискового алгоритма.
-        searcher_args : dict
+        searcher_args : Optional[dict]
             Словарь аргументов для поискового алгоритма.
 
         Returns
         -------
         None
         """
-        self.__type_searcher = searcher
-        self.__searcher_args = searcher_args
+        if searcher:
+            self.__type_searcher = searcher.__name__
+        if searcher_args:
+            self.__searcher_args = searcher_args
 
         self._searcher = self.__create_searcher(
             searcher=self.__type_searcher,
@@ -433,7 +437,7 @@ class Pipeline:
             original_array=self._original_dataset,
             preprocessing=self._preprocessing,
             clear_array=self._clear_dataset,
-            searcher_args=searcher_args,
+            searcher_args=self.__searcher_args,
         )
 
     def change_explainer(
@@ -475,4 +479,5 @@ def load_pipeline(path_to_filename: str) -> Pipeline:
     path_to_filename = Path(path_to_filename)
     with open(path_to_filename, 'rb') as f:
         pipeline = pickle.load(f)
+    pipeline.change_searcher()
     return pipeline

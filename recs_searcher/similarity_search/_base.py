@@ -4,6 +4,7 @@
 
 from typing import Iterable, List, Literal, Optional, Tuple
 import numpy as np
+from tqdm import tqdm
 
 from ..utils import create_date_name
 from ..base import BaseSearch, BaseEmbeddingSearch, BaseEmbedding, BaseTransformation
@@ -200,7 +201,7 @@ class ChromaDBSearch(BaseEmbeddingSearch):
         )
 
         if original_array.shape[0] > self._MAX_BATCH_CHROMA_DB:
-            for i in range(0, original_array.shape[0] - self._MAX_BATCH_CHROMA_DB, self._MAX_BATCH_CHROMA_DB):
+            for i in tqdm(range(0, original_array.shape[0] - self._MAX_BATCH_CHROMA_DB, self._MAX_BATCH_CHROMA_DB)):
                 chroma_database.add(
                     embeddings=embedding_database[i:i+self._MAX_BATCH_CHROMA_DB].tolist(),
                     ids=original_array[i:i+self._MAX_BATCH_CHROMA_DB].tolist(),
