@@ -547,7 +547,7 @@ class BaseExplain(ABC):
             text_list, similarity_list, indeces_n_grams_list = self._explain(
                 clear_compared_text,
                 clear_original_text,
-                n_grams=i,
+                n_grams=n_grams,
                 analyzer=analyzer,
                 sep=sep,
             )
