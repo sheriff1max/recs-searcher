@@ -5,7 +5,7 @@
 from ..base import BaseExplain, BaseEmbedding, BaseTransformation
 from ..utils import cosine_distance, euclidean_distance
 
-from typing import List, Union, Callable, Literal, Tuple 
+from typing import List, Union, Callable, Literal, Tuple, Optional
 import numpy as np
 
 
@@ -61,25 +61,38 @@ class DistanceExplain(BaseExplain):
         self,
         clear_compared_text: str,
         clear_original_text: str,
-        n_grams: int = 1,
-    ) -> Tuple[List[str], List[float]]:
-        tokens_list = clear_compared_text.split(' ')
+        n_grams: Optional[int] = 1,
+        analyzer: Literal['word', 'char'] = 'word',
+        sep: Optional[str] = ' ',
+    ) -> Tuple[List[str], List[float], List[Tuple[int, int]]]:
+        if analyzer == 'word':
+            n_grams_list, indeces_n_grams_list = self._split_by_words(
+                clear_text=clear_compared_text,
+                n_grams=n_grams,
+                sep=sep,
+            )
+        elif analyzer == 'char':
+            n_grams_list, indeces_n_grams_list = self._split_by_chars(
+                clear_text=clear_compared_text,
+                n_grams=n_grams,
+                sep=sep,
+            )
+        else:
+            raise ValueError(f'The `analyzer` parameter cannot take a value {analyzer}')
 
-        list_text = []
-        list_similarity = []
+        text_list = []
+        similarity_list = []
 
         clear_original_embedding = self._model.transform([clear_original_text])
-        for i in range(len(tokens_list) - n_grams + 1):
-            n_tokens_list = tokens_list[i:i + n_grams]
-            cut_text = ' '.join(n_tokens_list)
-            cut_text_embedding = self._model.transform([cut_text])
+        for n_gram in n_grams_list:
+            n_gram_embedding = self._model.transform([n_gram])
 
-            distance = self._distance(clear_original_embedding, cut_text_embedding)
+            distance = self._distance(clear_original_embedding, n_gram_embedding)
 
-            list_text.append(cut_text)
-            list_similarity.append(distance)
+            text_list.append(n_gram)
+            similarity_list.append(distance)
 
-        if len(list_text) == 0:
-            raise ValueError(f'The `n_grams` parameter must be <= {len(tokens_list)}')
+        if len(text_list) == 0:
+            raise ValueError(f'The `n_grams` parameter must be <= {len(n_grams_list)}')
 
-        return (list_text, list_similarity)
+        return text_list, similarity_list, indeces_n_grams_list

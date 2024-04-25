@@ -9,6 +9,7 @@ from sentence_transformers import InputExample
 from torch.utils.data import Dataset
 
 
+# TODO: обновить для use-case поиска схожих текстов.
 class SentenceTransformerDataset(Dataset):
     """Обёртка дадасета для эмбеддингов из Sentence-Transformers."""
 

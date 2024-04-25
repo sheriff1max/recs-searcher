@@ -6,7 +6,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Iterable, List, Optional, Union, Tuple
+from typing import Iterable, List, Literal, Optional, Union, Tuple
 import random
 
 import pandas as pd
@@ -181,15 +181,22 @@ class BaseSearch(ABC):
         text: Union[Iterable[str], str],
         preprocessing: List[BaseTransformation],
     ) -> Union[List[str], str]:
-        """"""
-        if isinstance(text, str):
-            for transformator in preprocessing:
-                tmp_text = transformator.transform([text])[0]
-                if tmp_text:
-                    text = tmp_text
-        else:
-            for transformator in preprocessing:
-                text = transformator.transform(text)
+        """
+        Предобработка текста.
+
+        Параметры
+        ----------
+        text : Union[Iterable[str], str]
+            Необработанный текст.
+        preprocessing : List[BaseTransformation]
+            Список алгоритмов для предобработка текста.
+
+        Returns
+        -------
+        text: Union[List[str], str]
+            Обработанный текст.
+        """
+        text = _preprocessing_text(text, preprocessing)
         return text
 
     @abstractmethod
@@ -349,29 +356,109 @@ class BaseExplain(ABC):
 
     def _preprocessing_text(
         self,
-        text: str,
+        text: Union[Iterable[str], str],
         preprocessing: List[BaseTransformation],
-    ) -> str:
+    ) -> Union[List[str], str]:
         """
         Предобработка текста.
 
         Параметры
         ----------
-        text : str
+        text : Union[Iterable[str], str]
             Необработанный текст.
         preprocessing : List[BaseTransformation]
             Список алгоритмов для предобработка текста.
 
         Returns
         -------
-        text: str
+        text: Union[List[str], str]
             Обработанный текст.
         """
-        for transformator in preprocessing:
-            tmp_text = transformator.transform([text])[0]
-            if tmp_text:
-                text = tmp_text
+        text = _preprocessing_text(text, preprocessing)
         return text
+
+    def _split_by_words(
+        self,
+        clear_text: str,
+        n_grams: Optional[int] = 1,
+        sep: Optional[str] = ' ',
+    ) -> Tuple[List[str], List[Tuple[int, int]]]:
+        """
+        Получение N-грамм слов.
+
+        Параметры
+        ----------
+        clear_text : str
+            Предобработанный текст.
+        n_grams : Optional[int]
+            Длина N-грамм.
+        sep: Optional[str]
+            Разделитель слов.
+
+        Returns
+        -------
+        n_grams_list: List[str]
+            Список N-грамм слов.
+        indeces_n_grams_list: List[Tuple[int, int]]
+            Список кортежей индексов начала и конца N-граммы из `n_grams_list`.
+        """
+        tokens = clear_text.split(sep)
+
+        start_idx = 0
+        indeces_n_grams_list = []
+        n_grams_list = []
+        for i in range(len(tokens) - n_grams + 1):
+            n_tokens_list = tokens[i:i + n_grams]
+            n_gram = ' '.join(n_tokens_list)
+            n_grams_list.append(n_gram)
+
+            indeces = (start_idx, start_idx + len(n_gram))
+            indeces_n_grams_list.append(indeces)
+            start_idx += len(n_tokens_list[0]) + len(sep)
+        return n_grams_list, indeces_n_grams_list
+
+    def _split_by_chars(
+        self,
+        clear_text: str,
+        n_grams: Optional[int] = 1,
+        sep: Optional[str] = ' ',
+    ) -> Tuple[List[str], List[Tuple[int, int]]]:
+        """
+        Получение N-грамм символов.
+
+        Параметры
+        ----------
+        clear_text : str
+            Предобработанный текст.
+        n_grams : Optional[int]
+            Длина N-грамм.
+        sep: Optional[str]
+            Разделитель слов.
+
+        Returns
+        -------
+        n_grams_list: List[str]
+            Список N-грамм символов.
+        indeces_n_grams_list: List[Tuple[int, int]]
+            Список кортежей индексов начала и конца N-граммы из `n_grams_list`.
+        """
+        n_grams_words, _ = self._split_by_words(clear_text, n_grams=1, sep=sep)
+
+        start_idx = 0
+        indeces_n_grams_list = []
+        n_grams_list = []
+        for word in n_grams_words:
+            counter = 0
+            for i in range(len(word) - n_grams + 1):
+                n_gram = word[i:i + n_grams]
+                n_grams_list.append(n_gram)
+
+                indeces = (start_idx, start_idx + len(n_gram))
+                indeces_n_grams_list.append(indeces)
+                start_idx += 1
+                counter += 1
+            start_idx += len(sep) + (len(word) - counter)
+        return n_grams_list, indeces_n_grams_list
 
     @abstractmethod
     def _explain(
@@ -379,7 +466,9 @@ class BaseExplain(ABC):
         clear_compared_text: str,
         clear_original_text: str,
         n_grams: int = 1,
-    ) -> Tuple[List[str], List[float]]:
+        analyzer: Literal['word', 'char'] = 'word',
+        sep: Optional[str] = ' ',
+    ) -> Tuple[List[str], List[float], List[Tuple[int, int]]]:
         """
         Поиск наиболее схожих N-грамм из clear_compared_text в clear_original_text.
 
@@ -392,23 +481,33 @@ class BaseExplain(ABC):
             Текст, с которым сравнивается clear_compared_text.
         n_grams : int
             Длина N-грамм.
+        analyzer: Literal['word', 'char']
+            Считать схожесть текстов на основе N-грамм слов или символов.
+        sep: Optional[str]
+            Разделитель слов.
 
         Returns
         -------
-        list_text, list_similarity: Tuple[List[str]. List[float]]
-            Кортеж списков.
+        text_list: List[str]
+            Список N-грамм слов или символов.
+        similarity_list: List[float]
+            Список близости N-граммы к `clear_original_text`.
+        indeces_n_grams_list: List[Tuple[int, int]]
+            Список кортежей индексов старта и конца N-граммы из `text_list`.
         """
 
     def explain(
         self,
         compared_text: str,
         original_text: str,
-        n_grams: Union[Tuple[int, int], int] = 1,
-        k: int = 10,
-        ascending: bool = True,
-    ) -> pd.DataFrame:
+        n_grams: Optional[Union[Tuple[int, int], int]] = 1,
+        analyzer: Optional[Literal['word', 'char']] = 'word',
+        sep: Optional[str] = ' ',
+        k: Optional[int] = 10,
+        ascending: Optional[bool] = True,
+    ) -> Tuple[pd.DataFrame, List[Tuple[int, int]]]:
         """
-        Поиск наиболее схожих N-грамм из compared_text в original_text.
+        Поиск наиболее схожих N-грамм из `compared_text` в `original_text`.
 
         Параметры
         ----------
@@ -417,12 +516,16 @@ class BaseExplain(ABC):
             похожие на original_text.
         original_text : str
             Текст, с которым сравнивается compared_text.
-        n_grams : Union[Tuple[int, int], int]
+        n_grams : Optional[Union[Tuple[int, int], int]]
             Длины N-грамм, которые будут оцениваться.
             Может приниматься либо одно число, либо список чисел.
-        k : int
+        analyzer: Optional[Literal['word', 'char']]
+            Считать схожесть текстов на основе N-грамм слов или символов.
+        sep: Optional[str]
+            Разделитель слов.
+        k : Optional[int]
             Кол-во выдаваемых результатов.
-        ascending : bool
+        ascending : Optional[bool]
             Флаг сортировки полученных результатов.
             False - убывающая, True - возрастающая сортировка.
 
@@ -431,30 +534,87 @@ class BaseExplain(ABC):
         df: pd.DataFrame
             Датафрейм с результатами.
             df.columns = ['text', 'similarity']
+        indeces_n_grams: List[Tuple[int, int]]
+            Список кортежей индексов старта и конца самых важных N-грамм из `df`.
         """
-
         clear_compared_text = self._preprocessing_text(compared_text, self._preprocessing)
         clear_original_text = self._preprocessing_text(original_text, self._preprocessing)
 
         if isinstance(n_grams, int):
-            if n_grams == 0:
+            if n_grams <= 0:
                 raise ValueError('The `n_grams` parameter must be > 0')
-            
-            list_text, list_similarity = self._explain(clear_compared_text, clear_original_text, n_grams=n_grams)
-        else:
-            if n_grams[0] == 0:
-                raise ValueError('The min value `n_grams` parameter must be > 0')
-            
-            list_text = []
-            list_similarity = []
-            for i in range(n_grams[0], n_grams[1]+1):
-                tmp_list_text, tmp_list_similarity = self._explain(clear_compared_text, clear_original_text, n_grams=i)
-                list_text.extend(tmp_list_text)
-                list_similarity.extend(tmp_list_similarity)
 
-        df = pd.DataFrame({'text': list_text, 'similarity': list_similarity})
+            text_list, similarity_list, indeces_n_grams_list = self._explain(
+                clear_compared_text,
+                clear_original_text,
+                n_grams=i,
+                analyzer=analyzer,
+                sep=sep,
+            )
+        else:
+            if n_grams[0] <= 0:
+                raise ValueError('The min value `n_grams` parameter must be > 0')
+
+            text_list = []
+            similarity_list = []
+            indeces_n_grams_list = []
+            for i in range(n_grams[0], n_grams[1]+1):
+                tmp_text_list, tmp_similarity_list, tmp_indeces_n_grams_list = self._explain(
+                    clear_compared_text,
+                    clear_original_text,
+                    n_grams=i,
+                    analyzer=analyzer,
+                    sep=sep,
+                )
+                text_list.extend(tmp_text_list)
+                similarity_list.extend(tmp_similarity_list)
+                indeces_n_grams_list.extend(tmp_indeces_n_grams_list)
+
+        df = pd.DataFrame({
+            'text': text_list,
+            'similarity': similarity_list,
+            'indeces_n_grams': indeces_n_grams_list,
+        })
         df = df.sort_values(by=['similarity'], ascending=ascending).reset_index(drop=True)
 
         k = min(k, df.shape[0])
         df = df.iloc[:k]
-        return df
+
+        indeces_n_grams = df['indeces_n_grams'].values.tolist()
+        df.drop(['indeces_n_grams'], axis=1, inplace=True)
+        return df, indeces_n_grams
+
+
+"""
+Общие функции для Base-классов.
+"""
+
+
+def _preprocessing_text(
+    text: Union[Iterable[str], str],
+    preprocessing: List[BaseTransformation],
+) -> Union[List[str], str]:
+    """
+    Предобработка текста.
+
+    Параметры
+    ----------
+    text : Union[Iterable[str], str]
+        Необработанный текст.
+    preprocessing : List[BaseTransformation]
+        Список алгоритмов для предобработка текста.
+
+    Returns
+    -------
+    text: Union[List[str], str]
+        Обработанный текст.
+    """
+    if isinstance(text, str):
+        for transformator in preprocessing:
+            tmp_text = transformator.transform([text])[0]
+            if tmp_text:
+                text = tmp_text
+    else:
+        for transformator in preprocessing:
+            text = transformator.transform(text)
+    return text

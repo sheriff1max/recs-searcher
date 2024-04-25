@@ -7,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.0.8',
+  version='0.0.9',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
@@ -34,7 +34,7 @@ setup(
   classifiers=[
     'Programming Language :: Python :: 3',
   ],
-  keywords='python searcher corrector faiss fasttext embeddings',
+  keywords='python searcher corrector faiss chroma-bd embeddings',
   project_urls={
     'Bug tracker': 'https://github.com/sheriff1max/recs-searcher/issues'
   },

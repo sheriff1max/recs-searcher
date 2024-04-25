@@ -1,7 +1,7 @@
 """ api.py
 Взаимодействие с системой."""
 
-from typing import List, Iterable, Dict, Type, Optional, Union, Tuple
+from typing import List, Iterable, Dict, Type, Optional, Union, Tuple, Literal
 
 from ..base import(
     BaseTransformation,
@@ -230,6 +230,7 @@ class Pipeline:
             Загруженный pipeline.
         """
         self = load_pipeline(path_to_filename)
+        # TODO: При загрузке - вызывать `self.change_searcher``
         return self
 
     def save(self, path_folder_save: str, filename: str) -> object:
@@ -255,6 +256,8 @@ class Pipeline:
         if '.pkl' not in filename:
             filename += '.pkl'
         path = path_folder_save / filename
+
+        # TODO: При сохранении - удалять `self._searcher`
 
         with open(path, 'wb') as f:
             pickle.dump(self, f)
@@ -319,21 +322,33 @@ class Pipeline:
         self,
         compared_text: str,
         original_text: str,
-        n_grams: Union[Tuple[int, int], int] = 1,
-        k: int = 10,
-        ascending: bool = True,
+        n_grams: Optional[Union[Tuple[int, int], int]] = 1,
+        analyzer: Optional[Literal['word', 'char']] = 'word',
+        sep: Optional[str] = ' ',
+        k: Optional[int] = 10,
+        ascending: Optional[bool] = True,
         **explainer_args
-    ) -> pd.DataFrame:
-        """Поиск наиболее схожих k-текстов из БД на text пользователя.
+    ) -> Tuple[pd.DataFrame, List[Tuple[int, int]]]:
+        """
+        Поиск наиболее схожих N-грамм из `compared_text` в `original_text`.
 
         Параметры
         ----------
-        text : str
-            Пользовательский текст, которому нужно найти наиболее
-            схожий текст из БД.
-        k : int
+        compared_text : str
+            Пользовательский текст, в котором нужно найти n-граммы,
+            похожие на original_text.
+        original_text : str
+            Текст, с которым сравнивается compared_text.
+        n_grams : Optional[Union[Tuple[int, int], int]]
+            Длины N-грамм, которые будут оцениваться.
+            Может приниматься либо одно число, либо список чисел.
+        analyzer: Optional[Literal['word', 'char']]
+            Считать схожесть текстов на основе N-грамм слов или символов.
+        sep: Optional[str]
+            Разделитель слов.
+        k : Optional[int]
             Кол-во выдаваемых результатов.
-        ascending : bool
+        ascending : Optional[bool]
             Флаг сортировки полученных результатов.
             False - убывающая, True - возрастающая сортировка.
 
@@ -342,6 +357,8 @@ class Pipeline:
         df: pd.DataFrame
             Датафрейм с результатами.
             df.columns = ['text', 'similarity']
+        indeces_n_grams: List[Tuple[int, int]]
+            Список кортежей индексов старта и конца самых важных N-грамм из `df`.
         """
         if self.__type_explainer is None:
             raise ValueError(f'The `explainer` parameter was not declared during initialization.')
@@ -355,6 +372,8 @@ class Pipeline:
             compared_text=compared_text,
             original_text=original_text,
             n_grams=n_grams,
+            analyzer=analyzer,
+            sep=sep,
             k=k,
             ascending=ascending,
         )
@@ -416,6 +435,24 @@ class Pipeline:
             clear_array=self._clear_dataset,
             searcher_args=searcher_args,
         )
+
+    def change_explainer(
+        self,
+        explainer: Type[BaseExplain],
+    ) -> None:
+        """
+        Изменение алгоритма для интерпретации результатов.
+
+        Параметры
+        ----------
+        explainer : Type[BaseExplain]
+            Тип алгоритма для интерпретации результатов.
+
+        Returns
+        -------
+        None
+        """
+        self.__type_explainer = explainer
 
 
 def load_pipeline(path_to_filename: str) -> Pipeline:
