@@ -30,6 +30,7 @@ setup(
     'thefuzz',
     'torch',
     'torchvision',
+    'pytest',
   ],
   classifiers=[
     'Programming Language :: Python :: 3',
