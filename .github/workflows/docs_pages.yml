@@ -30,9 +30,9 @@ jobs:
 
       - name: make the sphinx docs
         run: |
-          make -C docs clean 
-          # sphinx-apidoc -f -o docs/source . -H Test -e -t docs/source/_templates
-          make -C docs html
+          sphinx-apidoc -P -o docs ./recs_searcher
+          cd docs
+          .\make.bat html
 
       - name: Init new repo in dist folder and commit generated files
         run: |
