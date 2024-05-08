@@ -4,6 +4,7 @@ venv/
 .idea
 __pycache__
 dist/
+_build
 build
 recs_searcher.egg-info/
 weights/
