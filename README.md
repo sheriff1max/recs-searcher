@@ -1,6 +1,7 @@
 <div align="center">
 
 [![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/sheriff1max/recs-searcher/.github/workflows/python-app.yml)](https://github.com/sheriff1max/recs-searcher/actions/workflows/python-app.yaml)
+[![Read the docs](https://img.shields.io/readthedocs/recs-searcher)](https://recs-searcher.readthedocs.io/ru/latest/)
 
 [![PyPI](https://img.shields.io/pypi/v/recs-searcher?color=blue&style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/recs-searcher/) 
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/recs-searcher?style=for-the-badge&color=blue)](https://pepy.tech/project/recs-searcher) 
@@ -75,9 +76,11 @@ pipeline.search('Красный ярск', 3, ascending=True)
 # return: pandas.DataFrame
 ```
 
-Более подробный пример [API](https://github.com/sheriff1max/recs-searcher/blob/master/notebooks/tutorial_rus.ipynb).
+[Документация](https://recs-searcher.readthedocs.io/ru/latest/).
 
-Пример [WEB-интерфейса](https://github.com/sheriff1max/web-recs-searcher), в который внедрена данная бибилотека.
+Более подробные примеры кода [API](https://github.com/sheriff1max/recs-searcher/blob/master/notebooks/tutorial_rus.ipynb).
+
+Пример [WEB-интерфейса](https://github.com/sheriff1max/web-recs-searcher), в который внедрена данная библиотека.
 
 ### Автор
 - [Кобелев Максим](https://github.com/sheriff1max) — автор и единственный разработчик.
