@@ -1,0 +1,4 @@
+docutils
+ipython
+tomli
+sphinx-rtd-theme
