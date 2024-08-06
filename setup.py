@@ -7,7 +7,7 @@ def readme():
 
 setup(
   name='recs-searcher',
-  version='0.1.0',
+  version='0.1.1',
   author='sheriff1max',
   author_email='kobelevmaxim48@gmail.com',
   description='Search engine and registry error corrector',
@@ -39,5 +39,5 @@ setup(
   project_urls={
     'Bug tracker': 'https://github.com/sheriff1max/recs-searcher/issues'
   },
-  python_requires='>=3.11'
+  python_requires='>=3.10'
 )

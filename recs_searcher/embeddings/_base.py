@@ -173,7 +173,11 @@ class SentenceTransformerWrapperEmbedding(BaseEmbedding):
         return self
 
     def transform(self, array: Iterable[str]) -> np.ndarray:
-        array = self._model.encode(array)
+        array = self._model.encode(
+            sentences=array,
+            batch_size=self._batch_size,
+            show_progress_bar=self._show_progress_bar,
+        )
         return np.array(array)
 
 
